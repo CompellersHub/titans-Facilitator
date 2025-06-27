@@ -13,14 +13,14 @@ const COURSE_KEYS = {
 export function useCourses(filters?: Record<string, any>) {
   return useQuery({
     queryKey: COURSE_KEYS.list(filters || {}),
-    queryFn: () => apiClient.get<{ courses: Course[] }>("/courses").then((res) => res.courses),
+    queryFn: () => apiClient.get<Course[]>("/courses/courses/"),
   })
 }
 
 export function useCourse(courseId: string) {
   return useQuery({
     queryKey: COURSE_KEYS.detail(courseId),
-    queryFn: () => apiClient.get<{ course: Course }>(`/courses/${courseId}`).then((res) => res.course),
+    queryFn: () => apiClient.get<Course>(`/courses/courses/${courseId}/`),
     enabled: !!courseId,
   })
 }
@@ -29,7 +29,7 @@ export function useCreateCourse() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (courseData: Partial<Course>) => apiClient.post<{ course: Course }>("/courses", courseData),
+    mutationFn: (courseData: Partial<Course>) => apiClient.post<{ course: Course }>("/courses/courses/", courseData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: COURSE_KEYS.lists() })
     },
@@ -41,7 +41,7 @@ export function useUpdateCourse() {
 
   return useMutation({
     mutationFn: ({ courseId, data }: { courseId: string; data: Partial<Course> }) =>
-      apiClient.put<{ course: Course }>(`/courses/${courseId}`, data),
+      apiClient.put<{ course: Course }>(`/courses/courses/${courseId}/`, data),
     onSuccess: (_, { courseId }) => {
       queryClient.invalidateQueries({ queryKey: COURSE_KEYS.detail(courseId) })
       queryClient.invalidateQueries({ queryKey: COURSE_KEYS.lists() })
@@ -53,7 +53,7 @@ export function useDeleteCourse() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (courseId: string) => apiClient.delete(`/courses/${courseId}`),
+    mutationFn: (courseId: string) => apiClient.delete(`/courses/courses/${courseId}/`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: COURSE_KEYS.lists() })
     },

@@ -5,7 +5,7 @@ import type React from "react";
 
 import { useEffect, useState } from "react";
 // import { useRouter } from "next/navigation";
-import { Eye, EyeOff, GraduationCap, Loader2 } from "lucide-react";
+import { Eye, EyeOff,  Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/use-auth";
 import { ModeToggle } from "@/components/mode-toggle";
+import Image from "next/image";
 
 export function LoginForm() {
   const router = useRouter();
@@ -57,9 +58,16 @@ export function LoginForm() {
 
       <div className="text-center space-y-2">
         <div className="flex justify-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
+          {/* <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
             <GraduationCap className="h-7 w-7 text-primary-foreground" />
-          </div>
+          </div> */}
+          <Image
+            src={"https://titanscareers.com/assets/logo-DMzVeG9H.png"}
+            // layout="responsive"
+            alt="Titans Career"
+            width={100}
+            height={100}
+          />
         </div>
         <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
         <p className="text-muted-foreground">
@@ -67,7 +75,7 @@ export function LoginForm() {
         </p>
       </div>
 
-      <Card className="border-0 shadow-xl">
+      <Card className="border-0 shadow-md">
         <CardHeader className="space-y-1 pb-4">
           <CardTitle className="text-xl">Sign in</CardTitle>
           <CardDescription>
