@@ -47,21 +47,28 @@ export interface Course {
 }
 
 export interface CourseCurriculum {
-  id: string
+  id?: string
   title: string
   order: number
   video: CourseVideo[]
-  course_note: string | null
-  created_at: string
-  updated_at: string
+  course_note: CourseNote | null
+  created_at?: string
+  updated_at?: string
 }
 
 export interface CourseVideo {
-  id: string
+  id?: string
   title: string
   duration: string | null
   description: string
   video_file: string | null
+}
+
+export interface CourseNote {
+  id?: string
+  title: string
+  description: string | null
+  note_file: string | null
 }
 
 export interface CourseCategory {
@@ -69,28 +76,34 @@ export interface CourseCategory {
   name: string
 }
 
-export interface CourseSchedule {
+export interface CourseModule {
   id: string
-  dayOfWeek: number
-  startTime: string
-  endTime: string
-  location: string
+  title: string
+  order: number
+  video: CourseVideo[]
+  course_note: CourseNote | null
+  created_at: string
+  updated_at: string
 }
 
-// Student Types
-export interface Student {
-  id: string
-  email: string
-  firstName: string
-  lastName: string
-  studentId: string
-  avatar?: string
-  enrolledCourses: string[]
-  createdAt: string
-  updatedAt: string
+export interface CreateCourseData {
+  name: string
+  course_image: File | string
+  preview_id: File | string
+  preview_description: string
+  description: string
+  curriculum: CourseCurriculum[]
+  category: { name: string }
+  price: number
+  target_audience: Record<string, string>
+  learning_outcomes: Record<string, string>
+  required_materials: Record<string, string>
+  estimated_time: string
+  level: "beginner" | "intermediate" | "advanced"
+  instructor: { user_id: string }
 }
 
-// Assignment Types
+// Assignment Types (keeping existing)
 export interface Assignment {
   id: string
   title: string
@@ -135,6 +148,19 @@ export interface AssignmentSubmission {
   status: "submitted" | "graded" | "pending"
 }
 
+// Student Types
+export interface Student {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  studentId: string
+  avatar?: string
+  enrolledCourses: string[]
+  createdAt: string
+  updatedAt: string
+}
+
 // Message Types
 export interface Message {
   id: string
@@ -153,4 +179,42 @@ export interface DashboardStats {
   pendingAssignments: number
   unreadMessages: number
   upcomingClasses: number
+}
+
+
+
+
+// Live Classes Types
+export interface LiveClass {
+  id?: string
+  course: {
+    id: string
+    name: string
+  }
+  teacher: {
+    id: string
+    first_name: string
+    last_name: string
+  } | null
+  start_time: string
+  end_time: string
+  link: string
+  created_at?: string
+  provider?: "google" | "zoom" | "jitsi" | "aws" | "stream"
+}
+
+export interface CreateLiveClassData {
+  course_id: string
+  teacher_id: string
+  start_time: string
+  end_time: string
+  link: string
+  provider?: "google" | "zoom" | "jitsi" | "aws" | "stream"
+}
+
+export interface LiveClassProvider {
+  id: "google" | "zoom" | "jitsi" | "aws" | "stream"
+  name: string
+  icon: string
+  color: string
 }

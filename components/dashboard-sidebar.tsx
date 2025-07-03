@@ -81,7 +81,9 @@ export function DashboardSidebar({ open, setOpen }: DashboardSidebarProps) {
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
             <GraduationCap className="h-5 w-5 text-primary-foreground" />
           </div>
-          {open && <span className="font-semibold">TITANS CAREER</span>}
+          {open && (
+            <span className="font-semibold text-black">TITANS CAREER</span>
+          )}
         </div>
         <button
           onClick={() => setOpen(!open)}
@@ -102,9 +104,7 @@ export function DashboardSidebar({ open, setOpen }: DashboardSidebarProps) {
               href={item.href}
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-[#242428] hover:text-sidebar-accent-foreground",
-                pathname === item.href
-                  ? "bg-[#242428] text-white"
-                  : "text-white",
+                pathname === item.href ? "bg-primary text-white" : "text-black",
                 !open && "justify-center"
               )}
             >

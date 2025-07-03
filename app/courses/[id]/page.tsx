@@ -1,7 +1,7 @@
 import { DashboardLayout } from "@/components/dashboard-layout";
-import { AssignmentDetails } from "@/components/assignments/assignment-details";
+import { CourseDetails } from "@/components/courses/course-details";
 
-export default async function AssignmentDetailsPage({
+export default async function CourseDetailsPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -9,7 +9,7 @@ export default async function AssignmentDetailsPage({
   const { id } = await params;
   return (
     <DashboardLayout>
-      <AssignmentDetails assignmentId={id} />
+      <CourseDetails courseId={id} />
     </DashboardLayout>
   );
 }

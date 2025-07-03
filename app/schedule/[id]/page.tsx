@@ -1,7 +1,7 @@
 import { DashboardLayout } from "@/components/dashboard-layout";
-import { AssignmentDetails } from "@/components/assignments/assignment-details";
+import { LiveClassDetails } from "@/components/schedule/live-class-details";
 
-export default async function AssignmentDetailsPage({
+export default async function LiveClassDetailsPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -9,7 +9,7 @@ export default async function AssignmentDetailsPage({
   const { id } = await params;
   return (
     <DashboardLayout>
-      <AssignmentDetails assignmentId={id} />
+      <LiveClassDetails classId={id} />
     </DashboardLayout>
   );
 }
