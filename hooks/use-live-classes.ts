@@ -22,7 +22,7 @@ export function useLiveClass(classId: string) {
   return useQuery({
     queryKey: LIVE_CLASS_KEYS.detail(classId),
     queryFn: () =>
-      apiClient.get<LiveClass>(`/customuser/live-class/${classId}/`),
+      apiClient.get<LiveClass>(`/courses/live-classes/${classId}/`),
     enabled: !!classId,
   });
 }
