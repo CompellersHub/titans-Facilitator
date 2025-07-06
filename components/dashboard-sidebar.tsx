@@ -19,9 +19,16 @@ import { usePathname } from "next/navigation";
 interface DashboardSidebarProps {
   open: boolean;
   setOpen: (open: boolean) => void;
+  isMobile?: boolean;
+  onMobileLinkClick?: () => void;
 }
 
-export function DashboardSidebar({ open, setOpen }: DashboardSidebarProps) {
+export function DashboardSidebar({
+  open,
+  setOpen,
+  isMobile = false,
+  onMobileLinkClick,
+}: DashboardSidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
 
@@ -31,11 +38,6 @@ export function DashboardSidebar({ open, setOpen }: DashboardSidebarProps) {
       href: "/",
       icon: Home,
     },
-    // {
-    //   name: "Dashboard",
-    //   href: "/dashboard",
-    //   icon: LayoutDashboard,
-    // },
     {
       name: "Courses",
       href: "/courses",
@@ -61,11 +63,6 @@ export function DashboardSidebar({ open, setOpen }: DashboardSidebarProps) {
       href: "/assignments",
       icon: GraduationCap,
     },
-    // {
-    //   name: "Messages",
-    //   href: "/messages",
-    //   icon: MessageSquare,
-    // },
     {
       name: "Settings",
       href: "/settings",
@@ -73,32 +70,29 @@ export function DashboardSidebar({ open, setOpen }: DashboardSidebarProps) {
     },
   ];
 
-  return (
-    <div
-      className={cn(
-        "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-sidebar-background text-white transition-all duration-300 ease-in-out lg:relative",
-        open ? "translate-x-0" : "-translate-x-full lg:translate-x-0 lg:w-20"
-      )}
-    >
+  const sidebarContent = (
+    <>
       <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
             <GraduationCap className="h-5 w-5 text-primary-foreground" />
           </div>
-          {open && (
+          {(open || isMobile) && (
             <span className="font-semibold text-black">TITANS CAREER</span>
           )}
         </div>
-        <button
-          onClick={() => setOpen(!open)}
-          className="hidden lg:flex h-8 w-8 items-center justify-center rounded-md hover:bg-[#242428]"
-        >
-          {open ? (
-            <ChevronLeft className="h-4 w-4" />
-          ) : (
-            <ChevronRight className="h-4 w-4" />
-          )}
-        </button>
+        {!isMobile && (
+          <button
+            onClick={() => setOpen(!open)}
+            className="hidden lg:flex h-8 w-8 items-center bg-primary justify-center rounded-md hover:bg-[#242428]"
+          >
+            {open ? (
+              <ChevronLeft className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </button>
+        )}
       </div>
       <div className="flex-1 overflow-auto py-4 md:px-4">
         <nav className="grid gap-3 px-2 py-4">
@@ -106,14 +100,17 @@ export function DashboardSidebar({ open, setOpen }: DashboardSidebarProps) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={isMobile ? onMobileLinkClick : undefined}
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-primary hover:text-white",
                 pathname === item.href ? "bg-primary text-white" : "text-black",
-                !open && "justify-center"
+                !open && !isMobile && "justify-center"
               )}
             >
-              <item.icon className={cn("h-5 w-5", !open && "h-6 w-6")} />
-              {open && <span>{item.name}</span>}
+              <item.icon
+                className={cn("h-5 w-5", !open && !isMobile && "h-6 w-6")}
+              />
+              {(open || isMobile) && <span>{item.name}</span>}
             </Link>
           ))}
         </nav>
@@ -123,9 +120,9 @@ export function DashboardSidebar({ open, setOpen }: DashboardSidebarProps) {
           <div className="h-9 w-9 rounded-full bg-[#242428] flex items-center justify-center">
             <span className="text-sm font-medium">
               {user ? `${user.first_name[0]}${user.last_name[0]}` : "FC"}
-            </span>{" "}
+            </span>
           </div>
-          {open && (
+          {(open || isMobile) && (
             <div>
               <p className="text-sm font-medium">
                 {user
@@ -141,6 +138,27 @@ export function DashboardSidebar({ open, setOpen }: DashboardSidebarProps) {
           )}
         </div>
       </div>
+    </>
+  );
+
+  // For mobile, just return the content (will be wrapped in Sheet)
+  if (isMobile) {
+    return (
+      <div className="flex flex-col h-full bg-sidebar-background text-white">
+        {sidebarContent}
+      </div>
+    );
+  }
+
+  // For desktop, return the full sidebar with responsive behavior
+  return (
+    <div
+      className={cn(
+        "hidden lg:flex fixed inset-y-0 left-0 z-50 flex-col bg-sidebar-background text-white transition-all duration-300 ease-in-out",
+        open ? "w-64" : "w-20"
+      )}
+    >
+      {sidebarContent}
     </div>
   );
 }
