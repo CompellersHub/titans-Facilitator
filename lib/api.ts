@@ -1,28 +1,36 @@
-const API_BASE_URL = "https://api.titanscareers.com"
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const API_BASE_URL = "https://api.titanscareers.com";
 
 /**
  * Custom fetch wrapper for API calls
  */
-export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`
+export async function fetchApi<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const url = `${API_BASE_URL}${
+    endpoint.startsWith("/") ? endpoint : `/${endpoint}`
+  }`;
 
   const headers = {
     "Content-Type": "application/json",
     ...options.headers,
-  }
+  };
 
   const response = await fetch(url, {
     ...options,
     headers,
-  })
+  });
 
   if (!response.ok) {
     // Handle different error status codes
-    const errorData = await response.json().catch(() => ({}))
-    throw new Error(errorData.message || `API request failed with status ${response.status}`)
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.message || `API request failed with status ${response.status}`
+    );
   }
 
-  return response.json()
+  return response.json();
 }
 
 /**
@@ -41,7 +49,7 @@ export const authApi = {
         Authorization: `Bearer ${token}`,
       },
     }),
-}
+};
 
 /**
  * Courses API functions
@@ -60,7 +68,7 @@ export const coursesApi = {
         Authorization: `Bearer ${token}`,
       },
     }),
-}
+};
 
 /**
  * Students API functions
@@ -72,7 +80,7 @@ export const studentsApi = {
         Authorization: `Bearer ${token}`,
       },
     }),
-}
+};
 
 /**
  * Assignments API functions
@@ -93,4 +101,4 @@ export const assignmentsApi = {
         Authorization: `Bearer ${token}`,
       },
     }),
-}
+};

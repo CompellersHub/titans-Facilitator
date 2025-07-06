@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import {
   Calendar,
@@ -86,7 +87,9 @@ export function AssignmentDetails({ assignmentId }: AssignmentDetailsProps) {
 
       <Tabs defaultValue="details" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="details" className="shadow-none">Details</TabsTrigger>
+          <TabsTrigger value="details" className="shadow-none">
+            Details
+          </TabsTrigger>
           <TabsTrigger value="submissions" className="shadow-none">
             Submissions {submissions && `(${submissions.length})`}
           </TabsTrigger>
@@ -221,7 +224,7 @@ export function AssignmentDetails({ assignmentId }: AssignmentDetailsProps) {
                   No submissions yet
                 </h3>
                 <p className="text-muted-foreground">
-                  Students haven't submitted their assignments yet.
+                  Students haven&apos;t submitted their assignments yet.
                 </p>
               </CardContent>
             </Card>
