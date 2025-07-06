@@ -7,6 +7,7 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  FileText,
   GraduationCap,
   Home,
   Settings,
@@ -39,6 +40,11 @@ export function DashboardSidebar({ open, setOpen }: DashboardSidebarProps) {
       name: "Courses",
       href: "/courses",
       icon: BookOpen,
+    },
+    {
+      name: "Library",
+      href: "/library",
+      icon: FileText,
     },
     {
       name: "Students",

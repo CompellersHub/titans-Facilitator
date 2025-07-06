@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // AWS S3 Upload utility
 const S3_CONFIG = {
     accessKeyId: "AKIA3LJ4RV54VBU3THAR",

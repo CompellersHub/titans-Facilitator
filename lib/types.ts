@@ -1,4 +1,3 @@
-// User and Authentication Types
 export interface User {
   pk: string;
   id: string;
@@ -103,8 +102,27 @@ export interface CreateCourseData {
   level: "beginner" | "intermediate" | "advanced";
   instructor: { user_id: string };
 }
+export interface CourseLibrary {
+  id: string;
+  title: string;
+  file: string;
+  url: string;
+  created_at: string;
+  course_id: string;
+}
 
-// Assignment Types (keeping existing)
+export interface CreateCourseLibraryData {
+  title: string;
+  file?: File | null;
+  url?: string;
+  course: string;
+}
+
+export interface UpdateCourseLibraryData {
+  title?: string;
+  file?: File | null;
+  url?: string;
+}
 export interface Assignment {
   id: string;
   title: string;

@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
       "cdn.sanity.io",
       "titanscareers.com",
       "titanscareers.s3.amazonaws.com",
+      "api.titanscareers.com",
     ],
   },
 };
