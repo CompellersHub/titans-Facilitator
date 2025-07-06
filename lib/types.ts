@@ -1,5 +1,6 @@
 // User and Authentication Types
 export interface User {
+  pk: string;
   id: string;
   user_id: string;
   first_name: string;

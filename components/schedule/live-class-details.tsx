@@ -1,37 +1,55 @@
-"use client"
-import { Calendar, Clock, User, Edit, Trash2, ExternalLink, Copy, Users, Video } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useLiveClass } from "@/hooks/use-live-classes"
-import { format, isAfter, isBefore } from "date-fns"
-import { toast } from "sonner"
+"use client";
+import {
+  Calendar,
+  Clock,
+  User,
+  Edit,
+  Trash2,
+  ExternalLink,
+  Copy,
+  Users,
+  Video,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLiveClass } from "@/hooks/use-live-classes";
+import { format, isAfter, isBefore } from "date-fns";
+import { toast } from "sonner";
 
 interface LiveClassDetailsProps {
-  classId: string
+  classId: string;
 }
 
 export function LiveClassDetails({ classId }: LiveClassDetailsProps) {
-  const { data: liveClass, isLoading, error } = useLiveClass(classId)
+  const { data: liveClass, isLoading, error } = useLiveClass(classId);
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    toast.success("Copied to clipboard!")
-  }
+    navigator.clipboard.writeText(text);
+    toast.success("Copied to clipboard!");
+  };
 
   if (error) {
     return (
       <Alert variant="destructive">
-        <AlertDescription>Failed to load live class details. Please try again.</AlertDescription>
+        <AlertDescription>
+          Failed to load live class details. Please try again.
+        </AlertDescription>
       </Alert>
-    )
+    );
   }
 
   if (isLoading) {
-    return <LiveClassDetailsSkeleton />
+    return <LiveClassDetailsSkeleton />;
   }
 
   if (!liveClass) {
@@ -39,39 +57,48 @@ export function LiveClassDetails({ classId }: LiveClassDetailsProps) {
       <Alert>
         <AlertDescription>Live class not found.</AlertDescription>
       </Alert>
-    )
+    );
   }
 
   const getClassStatus = () => {
-    const now = new Date()
-    const startTime = new Date(liveClass.start_time)
-    const endTime = new Date(liveClass.end_time)
+    const now = new Date();
+    const startTime = new Date(liveClass.start_time);
+    const endTime = new Date(liveClass.end_time);
 
-    if (isBefore(now, startTime)) return "upcoming"
-    if (isAfter(now, startTime) && isBefore(now, endTime)) return "live"
-    return "completed"
-  }
+    if (isBefore(now, startTime)) return "upcoming";
+    if (isAfter(now, startTime) && isBefore(now, endTime)) return "live";
+    return "completed";
+  };
 
-  const status = getClassStatus()
-  const startTime = new Date(liveClass.start_time)
-  const endTime = new Date(liveClass.end_time)
+  const status = getClassStatus();
+  const startTime = new Date(liveClass.start_time);
+  const endTime = new Date(liveClass.end_time);
 
   const statusConfig = {
     upcoming: { color: "bg-blue-100 text-blue-800", label: "Upcoming" },
-    live: { color: "bg-green-100 text-green-800", label: "Live Now", pulse: true },
+    live: {
+      color: "bg-green-100 text-green-800",
+      label: "Live Now",
+      pulse: true,
+    },
     completed: { color: "bg-gray-100 text-gray-800", label: "Completed" },
-  }
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{liveClass.course.name}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {liveClass.course.name}
+          </h1>
           <p className="text-muted-foreground">Live Class Details</p>
         </div>
         <div className="flex space-x-2">
           {status === "live" && (
-            <Button className="bg-green-600 hover:bg-green-700" onClick={() => window.open(liveClass.link, "_blank")}>
+            <Button
+              className="bg-green-600 hover:bg-green-700"
+              onClick={() => window.open(liveClass.link, "_blank")}
+            >
               <ExternalLink className="mr-2 h-4 w-4" />
               Join Live Class
             </Button>
@@ -96,7 +123,11 @@ export function LiveClassDetails({ classId }: LiveClassDetailsProps) {
                   <Video className="h-5 w-5 text-blue-600" />
                   <span>Class Information</span>
                 </CardTitle>
-                <Badge className={`${statusConfig[status].color} ${statusConfig[status].pulse ? "animate-pulse" : ""}`}>
+                <Badge
+                  className={`${statusConfig[status].color} ${
+                    statusConfig[status].label === "live" ? "animate-pulse" : ""
+                  }`}
+                >
                   {statusConfig[status].label}
                 </Badge>
               </div>
@@ -108,7 +139,9 @@ export function LiveClassDetails({ classId }: LiveClassDetailsProps) {
                     <Calendar className="mr-2 h-4 w-4" />
                     <span>Date</span>
                   </div>
-                  <p className="font-medium">{format(startTime, "EEEE, MMMM dd, yyyy")}</p>
+                  <p className="font-medium">
+                    {format(startTime, "EEEE, MMMM dd, yyyy")}
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center text-sm text-muted-foreground">
@@ -127,11 +160,20 @@ export function LiveClassDetails({ classId }: LiveClassDetailsProps) {
                   <span>Meeting Link</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <code className="flex-1 p-2 bg-muted rounded text-sm font-mono">{liveClass.link}</code>
-                  <Button size="sm" variant="outline" onClick={() => copyToClipboard(liveClass.link)}>
+                  <code className="flex-1 p-2 bg-muted rounded text-sm font-mono">
+                    {liveClass.link}
+                  </code>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => copyToClipboard(liveClass.link)}
+                  >
                     <Copy className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" onClick={() => window.open(liveClass.link, "_blank")}>
+                  <Button
+                    size="sm"
+                    onClick={() => window.open(liveClass.link, "_blank")}
+                  >
                     <ExternalLink className="h-4 w-4" />
                   </Button>
                 </div>
@@ -155,7 +197,9 @@ export function LiveClassDetails({ classId }: LiveClassDetailsProps) {
                   <div className="space-y-4">
                     <div>
                       <h4 className="font-medium mb-2">Course Name</h4>
-                      <p className="text-muted-foreground">{liveClass.course.name}</p>
+                      <p className="text-muted-foreground">
+                        {liveClass.course.name}
+                      </p>
                     </div>
                     <div>
                       <h4 className="font-medium mb-2">Instructor</h4>
@@ -169,7 +213,9 @@ export function LiveClassDetails({ classId }: LiveClassDetailsProps) {
                               ? `${liveClass.teacher.first_name} ${liveClass.teacher.last_name}`
                               : "No instructor assigned"}
                           </p>
-                          <p className="text-sm text-muted-foreground">Course Instructor</p>
+                          <p className="text-sm text-muted-foreground">
+                            Course Instructor
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -182,13 +228,19 @@ export function LiveClassDetails({ classId }: LiveClassDetailsProps) {
               <Card>
                 <CardHeader>
                   <CardTitle>Enrolled Students</CardTitle>
-                  <CardDescription>Students who can join this live class</CardDescription>
+                  <CardDescription>
+                    Students who can join this live class
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center py-8">
                     <Users className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <h3 className="mt-4 text-lg font-semibold">Student list coming soon</h3>
-                    <p className="text-muted-foreground">Integration with student enrollment system in progress</p>
+                    <h3 className="mt-4 text-lg font-semibold">
+                      Student list coming soon
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Integration with student enrollment system in progress
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -198,13 +250,19 @@ export function LiveClassDetails({ classId }: LiveClassDetailsProps) {
               <Card>
                 <CardHeader>
                   <CardTitle>Class Materials</CardTitle>
-                  <CardDescription>Resources and materials for this live class</CardDescription>
+                  <CardDescription>
+                    Resources and materials for this live class
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center py-8">
                     <Video className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <h3 className="mt-4 text-lg font-semibold">No materials uploaded</h3>
-                    <p className="text-muted-foreground">Upload presentation slides, documents, or other resources</p>
+                    <h3 className="mt-4 text-lg font-semibold">
+                      No materials uploaded
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Upload presentation slides, documents, or other resources
+                    </p>
                     <Button className="mt-4 bg-transparent" variant="outline">
                       Upload Materials
                     </Button>
@@ -250,17 +308,24 @@ export function LiveClassDetails({ classId }: LiveClassDetailsProps) {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Duration</span>
                 <span className="font-medium">
-                  {Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60))} minutes
+                  {Math.round(
+                    (endTime.getTime() - startTime.getTime()) / (1000 * 60)
+                  )}{" "}
+                  minutes
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Status</span>
-                <Badge className={statusConfig[status].color}>{statusConfig[status].label}</Badge>
+                <Badge className={statusConfig[status].color}>
+                  {statusConfig[status].label}
+                </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Created</span>
                 <span className="font-medium">
-                  {liveClass.created_at ? format(new Date(liveClass.created_at), "MMM dd, yyyy") : "N/A"}
+                  {liveClass.created_at
+                    ? format(new Date(liveClass.created_at), "MMM dd, yyyy")
+                    : "N/A"}
                 </span>
               </div>
             </CardContent>
@@ -268,7 +333,7 @@ export function LiveClassDetails({ classId }: LiveClassDetailsProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function LiveClassDetailsSkeleton() {
@@ -293,5 +358,5 @@ function LiveClassDetailsSkeleton() {
         </div>
       </div>
     </div>
-  )
+  );
 }

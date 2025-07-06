@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -289,7 +290,7 @@ function LiveClassCard({ liveClass }: { liveClass: LiveClass }) {
           <div className="flex items-center space-x-2">
             <Badge
               className={`${statusConfig[status].color} ${
-                statusConfig[status].pulse ? "animate-pulse" : ""
+                statusConfig[status].label === "live" ? "animate-pulse" : ""
               }`}
             >
               {statusConfig[status].label}

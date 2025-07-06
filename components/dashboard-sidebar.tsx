@@ -9,7 +9,6 @@ import {
   ChevronRight,
   GraduationCap,
   Home,
-  MessageSquare,
   Settings,
   Users,
 } from "lucide-react";
@@ -56,11 +55,11 @@ export function DashboardSidebar({ open, setOpen }: DashboardSidebarProps) {
       href: "/assignments",
       icon: GraduationCap,
     },
-    {
-      name: "Messages",
-      href: "/messages",
-      icon: MessageSquare,
-    },
+    // {
+    //   name: "Messages",
+    //   href: "/messages",
+    //   icon: MessageSquare,
+    // },
     {
       name: "Settings",
       href: "/settings",
