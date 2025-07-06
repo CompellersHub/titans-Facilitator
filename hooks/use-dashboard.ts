@@ -12,23 +12,21 @@ export function useDashboardStats() {
     queryKey: DASHBOARD_KEYS.stats,
     queryFn: () =>
       apiClient
-        .get<{ stats: DashboardStats }>(
-          `/customuser/teacher/course-progress/${"6828477f04ee1e945fa33bef"}`
-        )
-        .then((res) => res.stats),
-    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
+        .get<{ stats: DashboardStats }>(`/customuser/teacher/dashboard`)
+        .then((res) => res as unknown as DashboardStats),
+    refetchInterval: 5 * 60 * 1000,
   });
 }
 
-export function useRecentActivity() {
-  return useQuery({
-    queryKey: DASHBOARD_KEYS.recentActivity,
-    queryFn: () =>
-      apiClient
-        .get<{ activities: any[] }>(
-          `/customuser/teacher/course-progress/${"6828477f04ee1e945fa33bef"}`
-        )
-        .then((res) => res.activities),
-    refetchInterval: 2 * 60 * 1000, // Refetch every 2 minutes
-  });
-}
+// export function useRecentActivity() {
+//   return useQuery({
+//     queryKey: DASHBOARD_KEYS.recentActivity,
+//     queryFn: () =>
+//       apiClient
+//         .get<{ activities: any[] }>(
+//           `/customuser/teacher/course-progress/${"6828477f04ee1e945fa33bef"}`
+//         )
+//         .then((res) => res.activities),
+//     refetchInterval: 2 * 60 * 1000, // Refetch every 2 minutes
+//   });
+// }

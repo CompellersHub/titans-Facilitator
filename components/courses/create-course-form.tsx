@@ -1,23 +1,40 @@
-"use client"
-import { BookOpen } from "lucide-react" // Import BookOpen here
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+import { BookOpen } from "lucide-react"; // Import BookOpen here
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { ArrowLeft, ArrowRight, Upload, Plus, Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Progress } from "@/components/ui/progress"
-import { useCreateCourse, useCourseCategories, useCourseModules, useCreateCategory } from "@/hooks/use-courses"
-import { uploadToS3, S3_FOLDERS } from "@/lib/s3-upload"
-import type { CourseCurriculum, CourseVideo, CreateCourseData } from "@/lib/types"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, ArrowRight, Upload, Plus, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
+import {
+  useCreateCourse,
+  useCourseCategories,
+  useCourseModules,
+  useCreateCategory,
+} from "@/hooks/use-courses";
+import { uploadToS3, S3_FOLDERS } from "@/lib/s3-upload";
+import type {
+  CourseCurriculum,
+  CourseModule,
+  CourseVideo,
+  CreateCourseData,
+} from "@/lib/types";
 
 export function CreateCourseForm() {
-  const [currentStep, setCurrentStep] = useState(0)
+  const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<Partial<CreateCourseData>>({
     name: "",
     preview_description: "",
@@ -44,36 +61,59 @@ export function CreateCourseForm() {
       name3: "",
       name4: "",
     },
-  })
-  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({})
-  const [newCategoryName, setNewCategoryName] = useState("")
+  });
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
+    {}
+  );
+  const [newCategoryName, setNewCategoryName] = useState("");
 
-  const router = useRouter()
-  const { mutate: createCourse, isPending, error } = useCreateCourse()
-  const { data: categories } = useCourseCategories()
-  const { data: modules } = useCourseModules()
-  const { mutate: createCategory } = useCreateCategory()
+  const router = useRouter();
+  const { mutate: createCourse, isPending, error } = useCreateCourse();
+  const { data: categories } = useCourseCategories();
+  const { data: modules } = useCourseModules();
+  const { mutate: createCategory } = useCreateCategory();
 
   const steps = [
-    { id: "basic", title: "Basic Information", description: "Course name, description, and media" },
-    { id: "curriculum", title: "Curriculum", description: "Course modules and content structure" },
-    { id: "details", title: "Course Details", description: "Audience, outcomes, and requirements" },
-    { id: "review", title: "Review", description: "Review and submit your course" },
-  ]
+    {
+      id: "basic",
+      title: "Basic Information",
+      description: "Course name, description, and media",
+    },
+    {
+      id: "curriculum",
+      title: "Curriculum",
+      description: "Course modules and content structure",
+    },
+    {
+      id: "details",
+      title: "Course Details",
+      description: "Audience, outcomes, and requirements",
+    },
+    {
+      id: "review",
+      title: "Review",
+      description: "Review and submit your course",
+    },
+  ];
 
-  const handleFileUpload = async (file: File, field: string, folder: string) => {
+  const handleFileUpload = async (
+    file: File,
+    field: string,
+    folder: string
+  ) => {
     try {
-      setUploadProgress((prev) => ({ ...prev, [field]: 0 }))
+      setUploadProgress((prev) => ({ ...prev, [field]: 0 }));
       const url = await uploadToS3({
         file,
         folder,
-        onProgress: (progress) => setUploadProgress((prev) => ({ ...prev, [field]: progress })),
-      })
-      setFormData((prev) => ({ ...prev, [field]: url }))
+        onProgress: (progress) =>
+          setUploadProgress((prev) => ({ ...prev, [field]: progress })),
+      });
+      setFormData((prev) => ({ ...prev, [field]: url }));
     } catch (error) {
-      console.error("Upload failed:", error)
+      console.error("Upload failed:", error);
     }
-  }
+  };
 
   const addCurriculumModule = () => {
     const newModule: CourseCurriculum = {
@@ -81,19 +121,24 @@ export function CreateCourseForm() {
       order: formData.curriculum?.length || 0,
       video: [],
       course_note: null,
-    }
+    };
     setFormData((prev) => ({
       ...prev,
       curriculum: [...(prev.curriculum || []), newModule],
-    }))
-  }
+    }));
+  };
 
-  const updateCurriculumModule = (index: number, updates: Partial<CourseCurriculum>) => {
+  const updateCurriculumModule = (
+    index: number,
+    updates: Partial<CourseCurriculum>
+  ) => {
     setFormData((prev) => ({
       ...prev,
-      curriculum: prev.curriculum?.map((module, i) => (i === index ? { ...module, ...updates } : module)),
-    }))
-  }
+      curriculum: prev.curriculum?.map((module, i) =>
+        i === index ? { ...module, ...updates } : module
+      ),
+    }));
+  };
 
   const addVideoToModule = (moduleIndex: number) => {
     const newVideo: CourseVideo = {
@@ -101,49 +146,53 @@ export function CreateCourseForm() {
       duration: "",
       description: "",
       video_file: null,
-    }
+    };
     setFormData((prev) => ({
       ...prev,
       curriculum: prev.curriculum?.map((module, i) =>
-        i === moduleIndex ? { ...module, video: [...module.video, newVideo] } : module,
+        i === moduleIndex
+          ? { ...module, video: [...module.video, newVideo] }
+          : module
       ),
-    }))
-  }
+    }));
+  };
 
   const handleCreateCategory = () => {
     if (newCategoryName.trim()) {
-      createCategory({ name: newCategoryName.trim() })
-      setNewCategoryName("")
+      createCategory({ name: newCategoryName.trim() });
+      setNewCategoryName("");
     }
-  }
+  };
 
   const handleSubmit = () => {
-    if (!formData.name || !formData.description) return
+    if (!formData.name || !formData.description) return;
 
     const courseData: CreateCourseData = {
       ...formData,
       instructor: { user_id: "2" }, // Current user ID
-    } as CreateCourseData
+    } as CreateCourseData;
 
     createCourse(courseData, {
       onSuccess: () => {
-        router.push("/courses")
+        router.push("/courses");
       },
-    })
-  }
+    });
+  };
 
   const canProceed = (step: number) => {
     switch (step) {
       case 0:
-        return formData.name && formData.description && formData.preview_description
+        return (
+          formData.name && formData.description && formData.preview_description
+        );
       case 1:
-        return formData.curriculum && formData.curriculum.length > 0
+        return formData.curriculum && formData.curriculum.length > 0;
       case 2:
-        return true
+        return true;
       default:
-        return true
+        return true;
     }
-  }
+  };
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -153,20 +202,28 @@ export function CreateCourseForm() {
             <div key={step.id} className="flex items-center">
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  index <= currentStep ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  index <= currentStep
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground"
                 }`}
               >
                 {index + 1}
               </div>
               {index < steps.length - 1 && (
-                <div className={`w-16 h-0.5 ${index < currentStep ? "bg-primary" : "bg-muted"}`} />
+                <div
+                  className={`w-16 h-0.5 ${
+                    index < currentStep ? "bg-primary" : "bg-muted"
+                  }`}
+                />
               )}
             </div>
           ))}
         </div>
         <div className="text-center">
           <h2 className="text-xl font-semibold">{steps[currentStep].title}</h2>
-          <p className="text-muted-foreground">{steps[currentStep].description}</p>
+          <p className="text-muted-foreground">
+            {steps[currentStep].description}
+          </p>
         </div>
       </div>
 
@@ -194,6 +251,7 @@ export function CreateCourseForm() {
           {currentStep === 1 && (
             <CurriculumStep
               formData={formData}
+              setFormData={setFormData}
               modules={modules}
               onAddModule={addCurriculumModule}
               onUpdateModule={updateCurriculumModule}
@@ -203,7 +261,9 @@ export function CreateCourseForm() {
             />
           )}
 
-          {currentStep === 2 && <CourseDetailsStep formData={formData} setFormData={setFormData} />}
+          {currentStep === 2 && (
+            <CourseDetailsStep formData={formData} setFormData={setFormData} />
+          )}
 
           {currentStep === 3 && <ReviewStep formData={formData} />}
         </CardContent>
@@ -220,7 +280,10 @@ export function CreateCourseForm() {
         </Button>
 
         {currentStep < steps.length - 1 ? (
-          <Button onClick={() => setCurrentStep(currentStep + 1)} disabled={!canProceed(currentStep)}>
+          <Button
+            onClick={() => setCurrentStep(currentStep + 1)}
+            disabled={!canProceed(currentStep)}
+          >
             Next
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
@@ -238,7 +301,7 @@ export function CreateCourseForm() {
         )}
       </div>
     </div>
-  )
+  );
 }
 
 function BasicInformationStep({
@@ -260,7 +323,9 @@ function BasicInformationStep({
             id="name"
             placeholder="Enter course name"
             value={formData.name || ""}
-            onChange={(e) => setFormData((prev: any) => ({ ...prev, name: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev: any) => ({ ...prev, name: e.target.value }))
+            }
           />
         </div>
 
@@ -271,7 +336,12 @@ function BasicInformationStep({
             type="number"
             placeholder="500"
             value={formData.price || ""}
-            onChange={(e) => setFormData((prev: any) => ({ ...prev, price: Number.parseInt(e.target.value) || 0 }))}
+            onChange={(e) =>
+              setFormData((prev: any) => ({
+                ...prev,
+                price: Number.parseInt(e.target.value) || 0,
+              }))
+            }
           />
         </div>
       </div>
@@ -282,7 +352,12 @@ function BasicInformationStep({
           id="preview_description"
           placeholder="Short description for course preview"
           value={formData.preview_description || ""}
-          onChange={(e) => setFormData((prev: any) => ({ ...prev, preview_description: e.target.value }))}
+          onChange={(e) =>
+            setFormData((prev: any) => ({
+              ...prev,
+              preview_description: e.target.value,
+            }))
+          }
           rows={2}
         />
       </div>
@@ -293,7 +368,12 @@ function BasicInformationStep({
           id="description"
           placeholder="Detailed course description"
           value={formData.description || ""}
-          onChange={(e) => setFormData((prev: any) => ({ ...prev, description: e.target.value }))}
+          onChange={(e) =>
+            setFormData((prev: any) => ({
+              ...prev,
+              description: e.target.value,
+            }))
+          }
           rows={4}
         />
       </div>
@@ -304,7 +384,12 @@ function BasicInformationStep({
           <div className="flex space-x-2">
             <Select
               value={formData.category?.name || ""}
-              onValueChange={(value) => setFormData((prev: any) => ({ ...prev, category: { name: value } }))}
+              onValueChange={(value) =>
+                setFormData((prev: any) => ({
+                  ...prev,
+                  category: { name: value },
+                }))
+              }
             >
               <SelectTrigger className="flex-1">
                 <SelectValue placeholder="Select category" />
@@ -335,7 +420,9 @@ function BasicInformationStep({
           <Label htmlFor="level">Level</Label>
           <Select
             value={formData.level || "beginner"}
-            onValueChange={(value) => setFormData((prev: any) => ({ ...prev, level: value }))}
+            onValueChange={(value) =>
+              setFormData((prev: any) => ({ ...prev, level: value }))
+            }
           >
             <SelectTrigger>
               <SelectValue />
@@ -354,7 +441,12 @@ function BasicInformationStep({
             id="estimated_time"
             placeholder="12 weeks"
             value={formData.estimated_time || ""}
-            onChange={(e) => setFormData((prev: any) => ({ ...prev, estimated_time: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev: any) => ({
+                ...prev,
+                estimated_time: e.target.value,
+              }))
+            }
           />
         </div>
       </div>
@@ -367,15 +459,18 @@ function BasicInformationStep({
               type="file"
               accept="image/*"
               onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) onFileUpload(file, "course_image", S3_FOLDERS.COURSE_IMAGES)
+                const file = e.target.files?.[0];
+                if (file)
+                  onFileUpload(file, "course_image", S3_FOLDERS.COURSE_IMAGES);
               }}
               className="hidden"
               id="course_image"
             />
             <Label htmlFor="course_image" className="cursor-pointer">
               <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">Click to upload course image</p>
+              <p className="text-sm text-muted-foreground">
+                Click to upload course image
+              </p>
             </Label>
             {uploadProgress.course_image !== undefined && (
               <Progress value={uploadProgress.course_image} className="mt-2" />
@@ -390,26 +485,31 @@ function BasicInformationStep({
               type="file"
               accept="video/*"
               onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) onFileUpload(file, "preview_id", S3_FOLDERS.VIDEOS)
+                const file = e.target.files?.[0];
+                if (file) onFileUpload(file, "preview_id", S3_FOLDERS.VIDEOS);
               }}
               className="hidden"
               id="preview_video"
             />
             <Label htmlFor="preview_video" className="cursor-pointer">
               <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">Click to upload preview video</p>
+              <p className="text-sm text-muted-foreground">
+                Click to upload preview video
+              </p>
             </Label>
-            {uploadProgress.preview_id !== undefined && <Progress value={uploadProgress.preview_id} className="mt-2" />}
+            {uploadProgress.preview_id !== undefined && (
+              <Progress value={uploadProgress.preview_id} className="mt-2" />
+            )}
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function CurriculumStep({
   formData,
+  setFormData,
   modules,
   onAddModule,
   onUpdateModule,
@@ -427,79 +527,171 @@ function CurriculumStep({
         </Button>
       </div>
 
-      <div className="space-y-4">
-        {formData.curriculum?.map((module: CourseCurriculum, moduleIndex: number) => (
-          <Card key={moduleIndex}>
-            <CardHeader>
-              <div className="flex items-center space-x-4">
-                <Input
-                  placeholder="Module title"
-                  value={module.title}
-                  onChange={(e) => onUpdateModule(moduleIndex, { title: e.target.value })}
-                  className="flex-1"
-                />
-                <Button variant="outline" size="sm" onClick={() => onAddVideo(moduleIndex)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Video
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {module.video.map((video: CourseVideo, videoIndex: number) => (
-                  <div key={videoIndex} className="grid grid-cols-3 gap-4 p-4 border rounded-lg">
-                    <Input
-                      placeholder="Video title"
-                      value={video.title}
-                      onChange={(e) => {
-                        const updatedVideos = [...module.video]
-                        updatedVideos[videoIndex] = { ...video, title: e.target.value }
-                        onUpdateModule(moduleIndex, { video: updatedVideos })
-                      }}
-                    />
-                    <Input
-                      placeholder="Duration (e.g., 15 minutes)"
-                      value={video.duration || ""}
-                      onChange={(e) => {
-                        const updatedVideos = [...module.video]
-                        updatedVideos[videoIndex] = { ...video, duration: e.target.value }
-                        onUpdateModule(moduleIndex, { video: updatedVideos })
-                      }}
-                    />
-                    <div className="space-y-2">
-                      <Input
-                        type="file"
-                        accept="video/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0]
-                          if (file) {
-                            const uploadKey = `video_${moduleIndex}_${videoIndex}`
-                            onFileUpload(file, uploadKey, S3_FOLDERS.VIDEOS).then((url: string) => {
-                              const updatedVideos = [...module.video]
-                              updatedVideos[videoIndex] = { ...video, video_file: url }
-                              onUpdateModule(moduleIndex, { video: updatedVideos })
-                            })
-                          }
-                        }}
-                        className="text-xs"
-                      />
-                      {uploadProgress[`video_${moduleIndex}_${videoIndex}`] !== undefined && (
-                        <Progress value={uploadProgress[`video_${moduleIndex}_${videoIndex}`]} />
-                      )}
-                    </div>
+      {/* Available modules to be selected */}
+      {modules && modules.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Available Modules</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {modules.map((module: CourseModule) => (
+                <div
+                  key={module.id}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
+                  <div className="flex-1">
+                    <h4 className="font-medium">{module.title}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {module.video.length} videos • Order: {module.order}
+                    </p>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const newModule: CourseCurriculum = {
+                        title: module.title,
+                        order: formData.curriculum?.length || 0,
+                        video: module.video.map((video: CourseVideo) => ({
+                          title: video.title,
+                          duration: video.duration,
+                          description: video.description,
+                          video_file: video.video_file,
+                        })),
+                        course_note: module.course_note,
+                      };
+                      setFormData((prev: any) => ({
+                        ...prev,
+                        curriculum: [...(prev.curriculum || []), newModule],
+                      }));
+                    }}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add to Course
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="space-y-4">
+        {formData.curriculum?.map(
+          (module: CourseCurriculum, moduleIndex: number) => (
+            <Card key={moduleIndex}>
+              <CardHeader>
+                <div className="flex items-center space-x-4">
+                  <Input
+                    placeholder="Module title"
+                    value={module.title}
+                    onChange={(e) =>
+                      onUpdateModule(moduleIndex, { title: e.target.value })
+                    }
+                    className="flex-1"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onAddVideo(moduleIndex)}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Video
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {module.video.map(
+                    (video: CourseVideo, videoIndex: number) => (
+                      <div
+                        key={videoIndex}
+                        className="grid grid-cols-3 gap-4 p-4 border rounded-lg"
+                      >
+                        <Input
+                          placeholder="Video title"
+                          value={video.title}
+                          onChange={(e) => {
+                            const updatedVideos = [...module.video];
+                            updatedVideos[videoIndex] = {
+                              ...video,
+                              title: e.target.value,
+                            };
+                            onUpdateModule(moduleIndex, {
+                              video: updatedVideos,
+                            });
+                          }}
+                        />
+                        <Input
+                          placeholder="Duration (e.g., 15 minutes)"
+                          value={video.duration || ""}
+                          onChange={(e) => {
+                            const updatedVideos = [...module.video];
+                            updatedVideos[videoIndex] = {
+                              ...video,
+                              duration: e.target.value,
+                            };
+                            onUpdateModule(moduleIndex, {
+                              video: updatedVideos,
+                            });
+                          }}
+                        />
+                        <div className="space-y-2">
+                          <Input
+                            type="file"
+                            accept="video/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const uploadKey = `video_${moduleIndex}_${videoIndex}`;
+                                onFileUpload(
+                                  file,
+                                  uploadKey,
+                                  S3_FOLDERS.VIDEOS
+                                ).then((url: string) => {
+                                  const updatedVideos = [...module.video];
+                                  updatedVideos[videoIndex] = {
+                                    ...video,
+                                    video_file: url,
+                                  };
+                                  onUpdateModule(moduleIndex, {
+                                    video: updatedVideos,
+                                  });
+                                });
+                              }
+                            }}
+                            className="text-xs"
+                          />
+                          {uploadProgress[
+                            `video_${moduleIndex}_${videoIndex}`
+                          ] !== undefined && (
+                            <Progress
+                              value={
+                                uploadProgress[
+                                  `video_${moduleIndex}_${videoIndex}`
+                                ]
+                              }
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )
+        )}
       </div>
 
       {formData.curriculum?.length === 0 && (
         <div className="text-center py-12 border-2 border-dashed border-muted-foreground/25 rounded-lg">
           <BookOpen className="mx-auto h-12 w-12 text-muted-foreground" />
           <h3 className="mt-4 text-lg font-semibold">No modules added yet</h3>
-          <p className="text-muted-foreground">Start building your course curriculum by adding modules</p>
+          <p className="text-muted-foreground">
+            Start building your course curriculum by adding modules
+          </p>
           <Button onClick={onAddModule} className="mt-4">
             <Plus className="mr-2 h-4 w-4" />
             Add First Module
@@ -507,7 +699,7 @@ function CurriculumStep({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 function CourseDetailsStep({ formData, setFormData }: any) {
@@ -518,8 +710,8 @@ function CourseDetailsStep({ formData, setFormData }: any) {
         ...prev[section],
         [field]: value,
       },
-    }))
-  }
+    }));
+  };
 
   return (
     <div className="space-y-8">
@@ -533,7 +725,13 @@ function CourseDetailsStep({ formData, setFormData }: any) {
                 id={`audience${i + 1}`}
                 placeholder={`Target audience ${i + 1}`}
                 value={formData.target_audience?.[`audience${i + 1}`] || ""}
-                onChange={(e) => updateNestedField("target_audience", `audience${i + 1}`, e.target.value)}
+                onChange={(e) =>
+                  updateNestedField(
+                    "target_audience",
+                    `audience${i + 1}`,
+                    e.target.value
+                  )
+                }
               />
             </div>
           ))}
@@ -550,7 +748,13 @@ function CourseDetailsStep({ formData, setFormData }: any) {
                 id={`outcome${i + 1}`}
                 placeholder={`Learning outcome ${i + 1}`}
                 value={formData.learning_outcomes?.[`outcome${i + 1}`] || ""}
-                onChange={(e) => updateNestedField("learning_outcomes", `outcome${i + 1}`, e.target.value)}
+                onChange={(e) =>
+                  updateNestedField(
+                    "learning_outcomes",
+                    `outcome${i + 1}`,
+                    e.target.value
+                  )
+                }
                 rows={2}
               />
             </div>
@@ -568,14 +772,20 @@ function CourseDetailsStep({ formData, setFormData }: any) {
                 id={`material${i + 1}`}
                 placeholder={`Required material ${i + 1}`}
                 value={formData.required_materials?.[`name${i + 1}`] || ""}
-                onChange={(e) => updateNestedField("required_materials", `name${i + 1}`, e.target.value)}
+                onChange={(e) =>
+                  updateNestedField(
+                    "required_materials",
+                    `name${i + 1}`,
+                    e.target.value
+                  )
+                }
               />
             </div>
           ))}
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function ReviewStep({ formData }: any) {
@@ -617,11 +827,14 @@ function ReviewStep({ formData }: any) {
             </div>
             <div>
               <strong>Total Videos:</strong>{" "}
-              {formData.curriculum?.reduce((acc: number, module: any) => acc + module.video.length, 0) || 0}
+              {formData.curriculum?.reduce(
+                (acc: number, module: any) => acc + module.video.length,
+                0
+              ) || 0}
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
-  )
+  );
 }

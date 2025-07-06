@@ -19,7 +19,6 @@ import {
   MessageSquare,
   Calendar,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 export function DashboardHome() {
   const { user, isLoading: authLoading, initializeAuth } = useAuth();
@@ -28,6 +27,7 @@ export function DashboardHome() {
     isLoading: statsLoading,
     error: statsError,
   } = useDashboardStats();
+  console.log(statsError);
 
   useEffect(() => {
     initializeAuth();
@@ -49,35 +49,10 @@ export function DashboardHome() {
         </h1>
         <p className="text-muted-foreground">
           {user?.bio
-            ? user.bio.substring(0, 100) + "..."
+            ? user?.bio.substring(0, 100) + "..."
             : "Here's what's happening with your courses today."}
         </p>
       </div>
-      {/* {user && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-2">
-              <div className="flex justify-between">
-                <span className="font-medium">Name:</span>
-                <span>
-                  {user.first_name} {user.last_name}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Username:</span>
-                <span>{user.username}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">User ID:</span>
-                <span>{user.pk}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )} */}
 
       {statsError && (
         <Alert variant="destructive">
@@ -91,39 +66,35 @@ export function DashboardHome() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <StatsCard
           title="Total Courses"
-          value={stats?.totalCourses}
+          value={stats?.total_courses}
           icon={BookOpen}
           loading={statsLoading}
-          cardColor="bg-blue-50"
         />
         <StatsCard
           title="Total Students"
-          value={stats?.totalStudents}
+          value={stats?.total_students}
           icon={Users}
           loading={statsLoading}
-          cardColor="bg-orange-50"
         />
         <StatsCard
           title="Pending Assignments"
-          value={stats?.pendingAssignments}
+          value={stats?.pending_assignments}
           icon={FileText}
           loading={statsLoading}
-          cardColor="bg-yellow-50"
         />
         <StatsCard
           title="Unread Messages"
-          value={stats?.unreadMessages}
+          value={stats?.unread_messages}
           icon={MessageSquare}
           loading={statsLoading}
-          cardColor="bg-emerald-50"
         />
         <StatsCard
           title="Upcoming Classes"
-          value={stats?.upcomingClasses}
+          value={stats?.upcoming_classes.length}
           icon={Calendar}
           loading={statsLoading}
-          cardColor="bg-purple-50"
         />
+       
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -162,27 +133,35 @@ function StatsCard({
   value,
   icon: Icon,
   loading,
-  cardColor,
 }: {
   title: string;
   value?: number;
   icon: React.ElementType;
   loading: boolean;
-  cardColor: string;
 }) {
   return (
-    <Card className={cn(cardColor, "border-none shadow-md")}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground ">
+    <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800/50 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-white/20 dark:to-gray-700/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 pt-6">
+        <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400 tracking-wide">
           {title}
         </CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+        <div className="p-2 rounded-lg bg-gray-100/80 dark:bg-gray-800/80 group-hover:bg-gray-200/80 dark:group-hover:bg-gray-700/80 transition-colors duration-200">
+          <Icon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+        </div>
       </CardHeader>
-      <CardContent>
+
+      <CardContent className="pb-6">
         {loading ? (
-          <Skeleton className="h-8 w-16" />
+          <Skeleton className="h-10 w-20" />
         ) : (
-          <div className="text-3xl font-bold text-primary">{value ?? 0}</div>
+          <div className="space-y-1">
+            <div className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+              {value?.toLocaleString() ?? 0}
+            </div>
+            <div className="h-1 w-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
+          </div>
         )}
       </CardContent>
     </Card>

@@ -7,8 +7,8 @@ import {
   Filter,
   BookOpen,
   Users,
-  DollarSign,
   Clock,
+  EuroIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCourses } from "@/hooks/use-courses";
 import Link from "next/link";
 import Image from "next/image";
+import { Course } from "@/lib/types";
 
 export function CoursesPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -124,7 +125,7 @@ export function CoursesPage() {
   );
 }
 
-function CourseCard({ course }: { course: any }) {
+function CourseCard({ course }: { course: Course }) {
   const levelColors = {
     beginner: "bg-green-100 text-green-800",
     intermediate: "bg-yellow-100 text-yellow-800",
@@ -159,7 +160,8 @@ function CourseCard({ course }: { course: any }) {
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center text-muted-foreground">
-                <DollarSign className="mr-1 h-4 w-4" />${course.price}
+                <EuroIcon className="mr-1 h-4 w-4" />
+                {course.price}
               </div>
               <div className="flex items-center text-muted-foreground">
                 <Clock className="mr-1 h-4 w-4" />

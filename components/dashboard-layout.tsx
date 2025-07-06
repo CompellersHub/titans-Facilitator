@@ -4,18 +4,22 @@ import type React from "react";
 
 import { useState } from "react";
 import { DashboardSidebar } from "./dashboard-sidebar";
-// import { ModeToggle } from "./mode-toggle";
-import { Bell, Menu } from "lucide-react";
+import { Bell, ChevronLeft, Menu } from "lucide-react";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { usePathname, useRouter } from "next/navigation";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
+  function handleNavigateBack() {
+    router.back();
+  }
   return (
     <div className="flex h-screen overflow-hidden">
       <DashboardSidebar open={sidebarOpen} setOpen={setSidebarOpen} />
@@ -47,7 +51,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </Avatar>
           </div>
         </header>
-        <main className="flex-1 overflow-auto p-4 lg:p-6">{children}</main>
+        <main className="flex-1 overflow-auto p-4 lg:p-6 ">
+          {pathname !== "/" && (
+            <div
+              className="flex gap-1 bg-gray-100 p-1 w-fit rounded-md text-sm mb-2"
+              onClick={handleNavigateBack}
+            >
+              <ChevronLeft className="text-sm" />
+              {/* <span>Back</span> */}
+            </div>
+          )}
+          {children}
+        </main>
       </div>
     </div>
   );

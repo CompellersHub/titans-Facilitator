@@ -31,7 +31,7 @@ export function useAuth() {
       // console.log("")
       apiClient.get<{ user: User }>("/api/auth/user").then((res) => {
         // console.log(res);
-        return res;
+        return res as unknown as User;
       }),
     enabled: !!apiClient.getAccessToken(),
     retry: false,

@@ -1,32 +1,55 @@
-"use client"
-import { Edit, Trash2, Play, Download, Users, Clock, DollarSign, BookOpen, Star } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { useCourse } from "@/hooks/use-courses"
-import Image from "next/image"
+"use client";
+import {
+  Edit,
+  Trash2,
+  Play,
+  Download,
+  Users,
+  Clock,
+  BookOpen,
+  Star,
+  EuroIcon,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { useCourse } from "@/hooks/use-courses";
+import Image from "next/image";
 
 interface CourseDetailsProps {
-  courseId: string
+  courseId: string;
 }
 
 export function CourseDetails({ courseId }: CourseDetailsProps) {
-  const { data: course, isLoading, error } = useCourse(courseId)
+  const { data: course, isLoading, error } = useCourse(courseId);
 
   if (error) {
     return (
       <Alert variant="destructive">
-        <AlertDescription>Failed to load course details. Please try again.</AlertDescription>
+        <AlertDescription>
+          Failed to load course details. Please try again.
+        </AlertDescription>
       </Alert>
-    )
+    );
   }
 
   if (isLoading) {
-    return <CourseDetailsSkeleton />
+    return <CourseDetailsSkeleton />;
   }
 
   if (!course) {
@@ -34,16 +57,18 @@ export function CourseDetails({ courseId }: CourseDetailsProps) {
       <Alert>
         <AlertDescription>Course not found.</AlertDescription>
       </Alert>
-    )
+    );
   }
 
   const levelColors = {
     beginner: "bg-green-100 text-green-800",
     intermediate: "bg-yellow-100 text-yellow-800",
     advanced: "bg-red-100 text-red-800",
-  }
+  };
 
-  const totalVideos = course.curriculum?.reduce((acc, module) => acc + module.video.length, 0) || 0
+  const totalVideos =
+    course.curriculum?.reduce((acc, module) => acc + module.video.length, 0) ||
+    0;
 
   return (
     <div className="space-y-6">
@@ -70,13 +95,19 @@ export function CourseDetails({ courseId }: CourseDetailsProps) {
             <CardContent className="p-0">
               <div className="relative h-64 w-full">
                 <Image
-                  src={course.course_image || "/placeholder.svg?height=300&width=600"}
+                  src={
+                    course.course_image ||
+                    "/placeholder.svg?height=300&width=600"
+                  }
                   alt={course.name}
                   fill
                   className="object-cover rounded-t-lg"
                 />
                 <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                  <Button size="lg" className="bg-white/90 text-black hover:bg-white">
+                  <Button
+                    size="lg"
+                    className="bg-white/90 text-black hover:bg-white"
+                  >
                     <Play className="mr-2 h-5 w-5" />
                     Preview Course
                   </Button>
@@ -84,8 +115,16 @@ export function CourseDetails({ courseId }: CourseDetailsProps) {
               </div>
               <div className="p-6">
                 <div className="flex items-center gap-4 mb-4">
-                  <Badge className={levelColors[course.level as keyof typeof levelColors]}>{course.level}</Badge>
-                  <span className="text-sm text-muted-foreground">{course.category.name}</span>
+                  <Badge
+                    className={
+                      levelColors[course.level as keyof typeof levelColors]
+                    }
+                  >
+                    {course.level}
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">
+                    {course.category.name}
+                  </span>
                 </div>
                 <p className="text-muted-foreground">{course.description}</p>
               </div>
@@ -104,17 +143,23 @@ export function CourseDetails({ courseId }: CourseDetailsProps) {
                 <CardHeader>
                   <CardTitle>Course Curriculum</CardTitle>
                   <CardDescription>
-                    {course.curriculum?.length || 0} modules • {totalVideos} videos
+                    {course.curriculum?.length || 0} modules • {totalVideos}{" "}
+                    videos
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Accordion type="single" collapsible className="w-full">
                     {course.curriculum?.map((module, index) => (
-                      <AccordionItem key={module.id || index} value={`module-${index}`}>
+                      <AccordionItem
+                        key={module.id || index}
+                        value={`module-${index}`}
+                      >
                         <AccordionTrigger className="text-left">
                           <div className="flex items-center justify-between w-full mr-4">
                             <span>{module.title}</span>
-                            <span className="text-sm text-muted-foreground">{module.video.length} videos</span>
+                            <span className="text-sm text-muted-foreground">
+                              {module.video.length} videos
+                            </span>
                           </div>
                         </AccordionTrigger>
                         <AccordionContent>
@@ -129,17 +174,23 @@ export function CourseDetails({ courseId }: CourseDetailsProps) {
                                   <div>
                                     <p className="font-medium">{video.title}</p>
                                     {video.description && (
-                                      <p className="text-sm text-muted-foreground">{video.description}</p>
+                                      <p className="text-sm text-muted-foreground">
+                                        {video.description}
+                                      </p>
                                     )}
                                   </div>
                                 </div>
-                                <span className="text-sm text-muted-foreground">{video.duration || "0:00"}</span>
+                                <span className="text-sm text-muted-foreground">
+                                  {video.duration || "0:00"}
+                                </span>
                               </div>
                             ))}
                             {module.course_note && (
                               <div className="flex items-center space-x-3 py-2 border-t">
                                 <Download className="h-4 w-4 text-muted-foreground" />
-                                <span className="font-medium">{module.course_note.title}</span>
+                                <span className="font-medium">
+                                  {module.course_note.title}
+                                </span>
                               </div>
                             )}
                           </div>
@@ -159,11 +210,13 @@ export function CourseDetails({ courseId }: CourseDetailsProps) {
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
-                      {Object.values(course.target_audience).map((audience, index) => (
-                        <li key={index} className="text-sm">
-                          • {audience}
-                        </li>
-                      ))}
+                      {Object.values(course.target_audience).map(
+                        (audience, index) => (
+                          <li key={index} className="text-sm">
+                            • {audience}
+                          </li>
+                        )
+                      )}
                     </ul>
                   </CardContent>
                 </Card>
@@ -174,11 +227,13 @@ export function CourseDetails({ courseId }: CourseDetailsProps) {
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
-                      {Object.values(course.learning_outcomes).map((outcome, index) => (
-                        <li key={index} className="text-sm">
-                          • {outcome}
-                        </li>
-                      ))}
+                      {Object.values(course.learning_outcomes).map(
+                        (outcome, index) => (
+                          <li key={index} className="text-sm">
+                            • {outcome}
+                          </li>
+                        )
+                      )}
                     </ul>
                   </CardContent>
                 </Card>
@@ -189,11 +244,13 @@ export function CourseDetails({ courseId }: CourseDetailsProps) {
                   </CardHeader>
                   <CardContent>
                     <ul className="grid grid-cols-2 gap-2">
-                      {Object.values(course.required_materials).map((material, index) => (
-                        <li key={index} className="text-sm">
-                          • {material}
-                        </li>
-                      ))}
+                      {Object.values(course.required_materials).map(
+                        (material, index) => (
+                          <li key={index} className="text-sm">
+                            • {material}
+                          </li>
+                        )
+                      )}
                     </ul>
                   </CardContent>
                 </Card>
@@ -210,7 +267,10 @@ export function CourseDetails({ courseId }: CourseDetailsProps) {
                     <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
                       {course.instructor?.profile_picture ? (
                         <Image
-                          src={course.instructor.profile_picture || "/placeholder.svg"}
+                          src={
+                            course.instructor.profile_picture ||
+                            "/placeholder.svg"
+                          }
                           alt={`${course.instructor.first_name} ${course.instructor.last_name}`}
                           width={64}
                           height={64}
@@ -225,10 +285,15 @@ export function CourseDetails({ courseId }: CourseDetailsProps) {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold">
-                        {course.instructor?.first_name} {course.instructor?.last_name}
+                        {course.instructor?.first_name}{" "}
+                        {course.instructor?.last_name}
                       </h3>
-                      <p className="text-sm text-muted-foreground mb-2">{course.instructor?.role}</p>
-                      <p className="text-sm leading-relaxed">{course.instructor?.bio}</p>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {course.instructor?.role}
+                      </p>
+                      <p className="text-sm leading-relaxed">
+                        {course.instructor?.bio}
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -245,10 +310,10 @@ export function CourseDetails({ courseId }: CourseDetailsProps) {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <EuroIcon className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">Price</span>
                 </div>
-                <span className="font-semibold">${course.price}</span>
+                <span className="font-semibold">{course.price}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
@@ -262,7 +327,9 @@ export function CourseDetails({ courseId }: CourseDetailsProps) {
                   <BookOpen className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">Modules</span>
                 </div>
-                <span className="font-semibold">{course.curriculum?.length || 0}</span>
+                <span className="font-semibold">
+                  {course.curriculum?.length || 0}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
@@ -296,7 +363,7 @@ export function CourseDetails({ courseId }: CourseDetailsProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function CourseDetailsSkeleton() {
@@ -321,5 +388,5 @@ function CourseDetailsSkeleton() {
         </div>
       </div>
     </div>
-  )
+  );
 }

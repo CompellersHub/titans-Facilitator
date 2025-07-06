@@ -9,7 +9,6 @@ import {
   ChevronRight,
   GraduationCap,
   Home,
-  LayoutDashboard,
   MessageSquare,
   Settings,
   Users,
@@ -32,11 +31,11 @@ export function DashboardSidebar({ open, setOpen }: DashboardSidebarProps) {
       href: "/",
       icon: Home,
     },
-    {
-      name: "Dashboard",
-      href: "/dashboard",
-      icon: LayoutDashboard,
-    },
+    // {
+    //   name: "Dashboard",
+    //   href: "/dashboard",
+    //   icon: LayoutDashboard,
+    // },
     {
       name: "Courses",
       href: "/courses",
@@ -96,14 +95,14 @@ export function DashboardSidebar({ open, setOpen }: DashboardSidebarProps) {
           )}
         </button>
       </div>
-      <div className="flex-1 overflow-auto py-4">
-        <nav className="grid gap-1 px-2">
+      <div className="flex-1 overflow-auto py-4 md:px-4">
+        <nav className="grid gap-3 px-2 py-4">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-[#242428] hover:text-sidebar-accent-foreground",
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-primary hover:text-white",
                 pathname === item.href ? "bg-primary text-white" : "text-black",
                 !open && "justify-center"
               )}
