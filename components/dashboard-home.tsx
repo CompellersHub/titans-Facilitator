@@ -95,13 +95,13 @@ export function DashboardHome() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <StatsCard
           title="Total Courses"
-          value={stats?.total_courses}
+          value={courses?.length}
           icon={BookOpen}
           loading={statsLoading}
         />
         <StatsCard
           title="Total Students"
-          value={stats?.total_students}
+          value={students?.length}
           icon={Users}
           loading={statsLoading}
         />
