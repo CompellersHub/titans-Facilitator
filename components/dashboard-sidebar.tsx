@@ -10,7 +10,7 @@ import {
   FileText,
   GraduationCap,
   Home,
-  Settings,
+  // Settings,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -63,11 +63,11 @@ export function DashboardSidebar({
       href: "/assignments",
       icon: GraduationCap,
     },
-    {
-      name: "Settings",
-      href: "/settings",
-      icon: Settings,
-    },
+    // {
+    //   name: "Settings",
+    //   href: "/settings",
+    //   icon: Settings,
+    // },
   ];
 
   const sidebarContent = (

@@ -123,6 +123,66 @@ export interface UpdateCourseLibraryData {
   file?: File | null;
   url?: string;
 }
+
+export interface Student {
+  id: string;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: "STUDENT";
+  phone_number: string | null;
+  course: StudentCourse[];
+  created_at?: string;
+}
+
+export interface StudentCourse {
+  id: string;
+  name: string;
+  course_image: string | null;
+  preview_id: string | null;
+  preview_description: string | null;
+  description: string | null;
+  category: CourseCategory | null;
+  price: number;
+  target_audience: Record<string, string> | null;
+  learning_outcomes: Record<string, string> | null;
+  instructor: User | null;
+  required_materials: Record<string, string> | null;
+  estimated_time: string | null;
+  level: string | null;
+}
+
+export interface UpdateStudentData {
+  username?: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  phone_number?: string;
+}
+
+export interface StudentsByCourseResponse {
+  students: Student[];
+  total_students: number;
+}
+
+// Student Progress Types
+export interface StudentProgress {
+  user_id: string;
+  course_id: string;
+  course_name: string;
+  progress_percentage: number;
+  details: ProgressDetail[];
+}
+
+export interface ProgressDetail {
+  type: "videos" | "course_notes" | "assignments" | "blog_pdfs";
+  completed: number;
+  opened: number;
+  submitted: number;
+  viewed: number;
+  total: number;
+}
 export interface Assignment {
   id: string;
   title: string;
