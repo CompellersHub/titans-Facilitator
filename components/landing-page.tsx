@@ -83,7 +83,7 @@ export function LandingPage() {
           <Button
             variant="ghost"
             onClick={() => router.push("/login")}
-            className="text-white/80 hover:text-white hover:bg-white/10 backdrop-blur-sm"
+            className="text-primary/80 hover:text-primary hover:bg-white/10 backdrop-blur-sm"
           >
             Sign In
           </Button>

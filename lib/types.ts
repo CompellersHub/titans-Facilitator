@@ -27,6 +27,26 @@ export interface LoginCredentials {
   password: string;
 }
 
+export interface SignUpResponse {
+  message: string;
+  teacher_id: string;
+  email: string;
+  next_step: "verify_otp";
+}
+
+export interface VerifyOTPData {
+  teacher_id: string;
+  email: string;
+  otp: string;
+}
+
+export interface VerifyOTPResponse {
+  message: string;
+  access?: string;
+  refresh?: string;
+  user_info?: User;
+}
+
 // Course Types
 export interface Course {
   id: string;

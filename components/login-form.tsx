@@ -1,11 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type React from "react";
 
 import { useEffect, useState } from "react";
 // import { useRouter } from "next/navigation";
-import { Eye, EyeOff,  Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,12 +23,16 @@ import Image from "next/image";
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
   const { login, isLoginLoading, loginError, user } = useAuth();
+
+  // Get success message from URL params
+  const successMessage = searchParams.get("message");
 
   //   useEffect(() => {
   //     initializeAuth();
@@ -84,6 +88,14 @@ export function LoginForm() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {successMessage && (
+              <Alert className="border-green-200 bg-green-50 dark:bg-green-950/20">
+                <AlertDescription className="text-green-800 dark:text-green-200">
+                  {successMessage}
+                </AlertDescription>
+              </Alert>
+            )}
+
             {loginError && (
               <Alert variant="destructive">
                 <AlertDescription>

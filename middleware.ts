@@ -7,7 +7,9 @@ export function middleware(request: NextRequest) {
   const isPublicPath =
     request.nextUrl.pathname.startsWith("/api") ||
     request.nextUrl.pathname === "/login" ||
-    request.nextUrl.pathname === "/";
+    request.nextUrl.pathname === "/" ||
+    request.nextUrl.pathname === "/sign-up" ||
+    request.nextUrl.pathname === "/verify-otp";
 
   // If user is not authenticated and trying to access protected route
   if (!accessToken && !isPublicPath) {

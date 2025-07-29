@@ -1,5 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import { User } from "./types";
+import { User, VerifyOTPResponse } from "./types";
 
 const API_BASE_URL = "https://api.titanscareers.com";
 
@@ -153,6 +153,57 @@ class ApiClient {
       const errorData = await response.json().catch(() => ({}));
       throw new ApiClientError(
         errorData.message || errorData.detail || "Login failed",
+        response.status,
+        errorData.code
+      );
+    }
+
+    return response.json();
+  }
+
+  // OTP verification method
+  async verifyOTP(data: {
+    teacher_id: string;
+    email: string;
+    otp: string;
+  }): Promise<VerifyOTPResponse> {
+    const response = await fetch(`${this.baseUrl}/customuser/verify-otp/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new ApiClientError(
+        errorData.message || errorData.detail || "OTP verification failed",
+        response.status,
+        errorData.code
+      );
+    }
+
+    return response.json();
+  }
+
+  // Resend OTP method
+  async resendOTP(data: {
+    teacher_id: string;
+    email: string;
+  }): Promise<{ message: string }> {
+    const response = await fetch(`${this.baseUrl}/customuser/resend-otp/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new ApiClientError(
+        errorData.message || errorData.detail || "Failed to resend OTP",
         response.status,
         errorData.code
       );
