@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("titans_access_token")?.value;
   const isLoginPage = request.nextUrl.pathname === "/login";
+  const isSignUpPage = request.nextUrl.pathname === "/sign-up";
   const isPublicPath =
     request.nextUrl.pathname.startsWith("/api") ||
     request.nextUrl.pathname === "/login" ||
@@ -19,6 +20,11 @@ export function middleware(request: NextRequest) {
   // If user is authenticated and trying to access login page
   if (accessToken && isLoginPage) {
     return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  // Allow access to sign-up page for both authenticated and unauthenticated users
+  if (isSignUpPage) {
+    return NextResponse.next();
   }
 
   return NextResponse.next();

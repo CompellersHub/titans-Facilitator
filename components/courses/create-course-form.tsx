@@ -1,10 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { BookOpen } from "lucide-react"; // Import BookOpen here
+import { BookOpen } from "lucide-react";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Upload, Plus, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Upload,
+  Plus,
+  Loader2,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,25 +50,13 @@ export function CreateCourseForm() {
     estimated_time: "",
     level: "beginner",
     curriculum: [],
-    target_audience: {
-      audience1: "",
-      audience2: "",
-      audience3: "",
-      audience4: "",
-    },
-    learning_outcomes: {
-      outcome1: "",
-      outcome2: "",
-      outcome3: "",
-      outcome4: "",
-    },
-    required_materials: {
-      name1: "",
-      name2: "",
-      name3: "",
-      name4: "",
-    },
   });
+
+  // Separate state for dynamic arrays
+  const [targetAudience, setTargetAudience] = useState<string[]>([""]);
+  const [learningOutcomes, setLearningOutcomes] = useState<string[]>([""]);
+  const [requiredMaterials, setRequiredMaterials] = useState<string[]>([""]);
+
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
     {}
   );
@@ -167,8 +162,26 @@ export function CreateCourseForm() {
   const handleSubmit = () => {
     if (!formData.name || !formData.description) return;
 
+    // Convert arrays to Record<string, string> format
+    const convertArrayToRecord = (arr: string[]) => {
+      const record: Record<string, string> = {};
+      arr.forEach((item, index) => {
+        if (item.trim()) {
+          record[`item${index + 1}`] = item.trim();
+        }
+      });
+      // Ensure at least one empty field if all are empty
+      if (Object.keys(record).length === 0) {
+        record["item1"] = "";
+      }
+      return record;
+    };
+
     const courseData: CreateCourseData = {
       ...formData,
+      target_audience: convertArrayToRecord(targetAudience),
+      learning_outcomes: convertArrayToRecord(learningOutcomes),
+      required_materials: convertArrayToRecord(requiredMaterials),
       instructor: { user_id: "2" }, // Current user ID
     } as CreateCourseData;
 
@@ -262,10 +275,24 @@ export function CreateCourseForm() {
           )}
 
           {currentStep === 2 && (
-            <CourseDetailsStep formData={formData} setFormData={setFormData} />
+            <CourseDetailsStep
+              targetAudience={targetAudience}
+              setTargetAudience={setTargetAudience}
+              learningOutcomes={learningOutcomes}
+              setLearningOutcomes={setLearningOutcomes}
+              requiredMaterials={requiredMaterials}
+              setRequiredMaterials={setRequiredMaterials}
+            />
           )}
 
-          {currentStep === 3 && <ReviewStep formData={formData} />}
+          {currentStep === 3 && (
+            <ReviewStep
+              formData={formData}
+              targetAudience={targetAudience}
+              learningOutcomes={learningOutcomes}
+              requiredMaterials={requiredMaterials}
+            />
+          )}
         </CardContent>
       </Card>
 
@@ -702,84 +729,178 @@ function CurriculumStep({
   );
 }
 
-function CourseDetailsStep({ formData, setFormData }: any) {
-  const updateNestedField = (section: string, field: string, value: string) => {
-    setFormData((prev: any) => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value,
-      },
-    }));
+function CourseDetailsStep({
+  targetAudience,
+  setTargetAudience,
+  learningOutcomes,
+  setLearningOutcomes,
+  requiredMaterials,
+  setRequiredMaterials,
+}: {
+  targetAudience: string[];
+  setTargetAudience: (value: string[]) => void;
+  learningOutcomes: string[];
+  setLearningOutcomes: (value: string[]) => void;
+  requiredMaterials: string[];
+  setRequiredMaterials: (value: string[]) => void;
+}) {
+  const addTargetAudience = () => {
+    setTargetAudience([...targetAudience, ""]);
+  };
+
+  const updateTargetAudience = (index: number, value: string) => {
+    const updated = targetAudience.map((item, i) =>
+      i === index ? value : item
+    );
+    setTargetAudience(updated);
+  };
+
+  const removeTargetAudience = (index: number) => {
+    setTargetAudience(targetAudience.filter((_, i) => i !== index));
+  };
+
+  const addLearningOutcome = () => {
+    setLearningOutcomes([...learningOutcomes, ""]);
+  };
+
+  const updateLearningOutcome = (index: number, value: string) => {
+    const updated = learningOutcomes.map((item, i) =>
+      i === index ? value : item
+    );
+    setLearningOutcomes(updated);
+  };
+
+  const removeLearningOutcome = (index: number) => {
+    setLearningOutcomes(learningOutcomes.filter((_, i) => i !== index));
+  };
+
+  const addRequiredMaterial = () => {
+    setRequiredMaterials([...requiredMaterials, ""]);
+  };
+
+  const updateRequiredMaterial = (index: number, value: string) => {
+    const updated = requiredMaterials.map((item, i) =>
+      i === index ? value : item
+    );
+    setRequiredMaterials(updated);
+  };
+
+  const removeRequiredMaterial = (index: number) => {
+    setRequiredMaterials(requiredMaterials.filter((_, i) => i !== index));
   };
 
   return (
     <div className="space-y-8">
       <div>
-        <h3 className="text-lg font-semibold mb-4">Target Audience</h3>
-        <div className="grid grid-cols-2 gap-4">
-          {Array.from({ length: 4 }, (_, i) => (
-            <div key={i} className="space-y-2">
-              <Label htmlFor={`audience${i + 1}`}>Audience {i + 1}</Label>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Target Audience</h3>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={addTargetAudience}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Audience
+          </Button>
+        </div>
+        <div className="space-y-3">
+          {targetAudience.map((audience: string, index: number) => (
+            <div key={index} className="flex items-center gap-2">
               <Input
-                id={`audience${i + 1}`}
-                placeholder={`Target audience ${i + 1}`}
-                value={formData.target_audience?.[`audience${i + 1}`] || ""}
-                onChange={(e) =>
-                  updateNestedField(
-                    "target_audience",
-                    `audience${i + 1}`,
-                    e.target.value
-                  )
-                }
+                placeholder={`Target audience ${index + 1}`}
+                value={audience}
+                onChange={(e) => updateTargetAudience(index, e.target.value)}
+                className="flex-1"
               />
+              {targetAudience.length > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => removeTargetAudience(index)}
+                  title={`Remove audience ${index + 1}`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           ))}
         </div>
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold mb-4">Learning Outcomes</h3>
-        <div className="grid grid-cols-2 gap-4">
-          {Array.from({ length: 4 }, (_, i) => (
-            <div key={i} className="space-y-2">
-              <Label htmlFor={`outcome${i + 1}`}>Outcome {i + 1}</Label>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Learning Outcomes</h3>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={addLearningOutcome}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Outcome
+          </Button>
+        </div>
+        <div className="space-y-3">
+          {learningOutcomes.map((outcome: string, index: number) => (
+            <div key={index} className="flex items-center gap-2">
               <Textarea
-                id={`outcome${i + 1}`}
-                placeholder={`Learning outcome ${i + 1}`}
-                value={formData.learning_outcomes?.[`outcome${i + 1}`] || ""}
-                onChange={(e) =>
-                  updateNestedField(
-                    "learning_outcomes",
-                    `outcome${i + 1}`,
-                    e.target.value
-                  )
-                }
+                placeholder={`Learning outcome ${index + 1}`}
+                value={outcome}
+                onChange={(e) => updateLearningOutcome(index, e.target.value)}
                 rows={2}
+                className="flex-1"
               />
+              {learningOutcomes.length > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => removeLearningOutcome(index)}
+                  title={`Remove outcome ${index + 1}`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           ))}
         </div>
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold mb-4">Required Materials</h3>
-        <div className="grid grid-cols-2 gap-4">
-          {Array.from({ length: 4 }, (_, i) => (
-            <div key={i} className="space-y-2">
-              <Label htmlFor={`material${i + 1}`}>Material {i + 1}</Label>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Required Materials</h3>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={addRequiredMaterial}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Material
+          </Button>
+        </div>
+        <div className="space-y-3">
+          {requiredMaterials.map((material: string, index: number) => (
+            <div key={index} className="flex items-center gap-2">
               <Input
-                id={`material${i + 1}`}
-                placeholder={`Required material ${i + 1}`}
-                value={formData.required_materials?.[`name${i + 1}`] || ""}
-                onChange={(e) =>
-                  updateNestedField(
-                    "required_materials",
-                    `name${i + 1}`,
-                    e.target.value
-                  )
-                }
+                placeholder={`Required material ${index + 1}`}
+                value={material}
+                onChange={(e) => updateRequiredMaterial(index, e.target.value)}
+                className="flex-1"
               />
+              {requiredMaterials.length > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => removeRequiredMaterial(index)}
+                  title={`Remove material ${index + 1}`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           ))}
         </div>
@@ -788,7 +909,17 @@ function CourseDetailsStep({ formData, setFormData }: any) {
   );
 }
 
-function ReviewStep({ formData }: any) {
+function ReviewStep({
+  formData,
+  targetAudience,
+  learningOutcomes,
+  requiredMaterials,
+}: {
+  formData: any;
+  targetAudience: string[];
+  learningOutcomes: string[];
+  requiredMaterials: string[];
+}) {
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-semibold">Review Your Course</h3>
@@ -831,6 +962,50 @@ function ReviewStep({ formData }: any) {
                 (acc: number, module: any) => acc + module.video.length,
                 0
               ) || 0}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Course Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <strong>Target Audience:</strong>
+              <ul className="list-disc list-inside mt-1">
+                {targetAudience
+                  .filter((audience: string) => audience.trim())
+                  .map((audience: string, index: number) => (
+                    <li key={index} className="text-sm">
+                      {audience}
+                    </li>
+                  ))}
+              </ul>
+            </div>
+            <div>
+              <strong>Learning Outcomes:</strong>
+              <ul className="list-disc list-inside mt-1">
+                {learningOutcomes
+                  .filter((outcome: string) => outcome.trim())
+                  .map((outcome: string, index: number) => (
+                    <li key={index} className="text-sm">
+                      {outcome}
+                    </li>
+                  ))}
+              </ul>
+            </div>
+            <div>
+              <strong>Required Materials:</strong>
+              <ul className="list-disc list-inside mt-1">
+                {requiredMaterials
+                  .filter((material: string) => material.trim())
+                  .map((material: string, index: number) => (
+                    <li key={index} className="text-sm">
+                      {material}
+                    </li>
+                  ))}
+              </ul>
             </div>
           </CardContent>
         </Card>
