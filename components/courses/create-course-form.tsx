@@ -57,9 +57,10 @@ export function CreateCourseForm() {
   const [learningOutcomes, setLearningOutcomes] = useState<string[]>([""]);
   const [requiredMaterials, setRequiredMaterials] = useState<string[]>([""]);
 
-  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
-    {}
-  );
+  const [uploadProgress, setUploadProgress] = useState<
+    Record<string, number | undefined>
+  >({});
+  const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
   const [newCategoryName, setNewCategoryName] = useState("");
 
   const router = useRouter();
@@ -97,6 +98,9 @@ export function CreateCourseForm() {
     folder: string
   ) => {
     try {
+      // Clear any previous errors for this field
+      setUploadErrors((prev) => ({ ...prev, [field]: "" }));
+
       setUploadProgress((prev) => ({ ...prev, [field]: 0 }));
       const url = await uploadToS3({
         file,
@@ -105,8 +109,17 @@ export function CreateCourseForm() {
           setUploadProgress((prev) => ({ ...prev, [field]: progress })),
       });
       setFormData((prev) => ({ ...prev, [field]: url }));
+
+      // Clear progress after successful upload
+      setTimeout(() => {
+        setUploadProgress((prev) => ({ ...prev, [field]: undefined }));
+      }, 2000);
     } catch (error) {
       console.error("Upload failed:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Upload failed";
+      setUploadErrors((prev) => ({ ...prev, [field]: errorMessage }));
+      setUploadProgress((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
@@ -255,6 +268,7 @@ export function CreateCourseForm() {
               categories={categories}
               onFileUpload={handleFileUpload}
               uploadProgress={uploadProgress}
+              uploadErrors={uploadErrors}
               newCategoryName={newCategoryName}
               setNewCategoryName={setNewCategoryName}
               onCreateCategory={handleCreateCategory}
@@ -271,6 +285,7 @@ export function CreateCourseForm() {
               onAddVideo={addVideoToModule}
               onFileUpload={handleFileUpload}
               uploadProgress={uploadProgress}
+              uploadErrors={uploadErrors}
             />
           )}
 
@@ -337,6 +352,7 @@ function BasicInformationStep({
   categories,
   onFileUpload,
   uploadProgress,
+  uploadErrors,
   newCategoryName,
   setNewCategoryName,
   onCreateCategory,
@@ -502,6 +518,18 @@ function BasicInformationStep({
             {uploadProgress.course_image !== undefined && (
               <Progress value={uploadProgress.course_image} className="mt-2" />
             )}
+            {uploadErrors.course_image && (
+              <Alert variant="destructive" className="mt-2">
+                <AlertDescription className="text-xs">
+                  {uploadErrors.course_image}
+                </AlertDescription>
+              </Alert>
+            )}
+            {formData.course_image && (
+              <p className="text-xs text-green-600 mt-1">
+                ✓ Image uploaded successfully
+              </p>
+            )}
           </div>
         </div>
 
@@ -526,6 +554,18 @@ function BasicInformationStep({
             </Label>
             {uploadProgress.preview_id !== undefined && (
               <Progress value={uploadProgress.preview_id} className="mt-2" />
+            )}
+            {uploadErrors.preview_id && (
+              <Alert variant="destructive" className="mt-2">
+                <AlertDescription className="text-xs">
+                  {uploadErrors.preview_id}
+                </AlertDescription>
+              </Alert>
+            )}
+            {formData.preview_id && (
+              <p className="text-xs text-green-600 mt-1">
+                ✓ Video uploaded successfully
+              </p>
             )}
           </div>
         </div>
