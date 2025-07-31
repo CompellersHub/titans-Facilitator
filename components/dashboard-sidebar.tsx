@@ -123,7 +123,7 @@ export function DashboardSidebar({
             </span>
           </div>
           {(open || isMobile) && (
-            <div>
+            <div className="bg-card text-card-foreground p-2 rounded-md">
               <p className="text-sm font-medium">
                 {user
                   ? `${user.first_name} ${user.last_name}`

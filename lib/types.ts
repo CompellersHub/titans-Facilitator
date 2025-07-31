@@ -113,8 +113,9 @@ export interface CreateCourseData {
   preview_description: string;
   description: string;
   curriculum: CourseCurriculum[];
-  category: { name: string };
+  category: CourseCategory;
   price: number;
+  original_price: number;
   target_audience: Record<string, string>;
   learning_outcomes: Record<string, string>;
   required_materials: Record<string, string>;

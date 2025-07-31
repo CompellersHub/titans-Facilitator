@@ -8,7 +8,7 @@ import {
   Clock,
   BookOpen,
   Star,
-  EuroIcon,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -310,10 +310,10 @@ export function CourseDetails({ courseId }: CourseDetailsProps) {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <EuroIcon className="h-4 w-4 text-muted-foreground" />
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">Price</span>
                 </div>
-                <span className="font-semibold">{course.price}</span>
+                <span className="font-semibold">${course.price}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">

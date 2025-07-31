@@ -53,57 +53,26 @@ export function useCreateCourse() {
 
   return useMutation({
     mutationFn: async (courseData: CreateCourseData) => {
-      const formData = new FormData();
+      // Since we're now using S3 URLs, we send JSON data instead of FormData
+      const payload = {
+        name: courseData.name,
+        preview_description: courseData.preview_description,
+        description: courseData.description,
+        price: courseData.price,
+        original_price: courseData.original_price || courseData.price, // Add original_price
+        estimated_time: courseData.estimated_time,
+        level: courseData.level,
+        course_image: courseData.course_image, // Now expects URL string
+        preview_id: courseData.preview_id, // Now expects URL string
+        category: courseData.category,
+        curriculum: courseData.curriculum,
+        target_audience: courseData.target_audience,
+        learning_outcomes: courseData.learning_outcomes,
+        required_materials: courseData.required_materials,
+        instructor: courseData.instructor,
+      };
 
-      // Basic course information
-      formData.append("name", courseData.name);
-      formData.append("preview_description", courseData.preview_description);
-      formData.append("description", courseData.description);
-      formData.append("price", courseData.price.toString());
-      formData.append("estimated_time", courseData.estimated_time);
-      formData.append("level", courseData.level);
-
-      // Handle file uploads
-      if (courseData.course_image instanceof File) {
-        formData.append("course_image", courseData.course_image);
-      }
-      if (courseData.preview_id instanceof File) {
-        formData.append("preview_id", courseData.preview_id);
-      }
-
-      // Category
-      formData.append("category", JSON.stringify(courseData.category.name));
-
-      // Complex nested data
-      formData.append("curriculum", JSON.stringify(courseData.curriculum));
-      formData.append(
-        "target_audience",
-        JSON.stringify(courseData.target_audience)
-      );
-      formData.append(
-        "learning_outcomes",
-        JSON.stringify(courseData.learning_outcomes)
-      );
-      formData.append(
-        "required_materials",
-        JSON.stringify(courseData.required_materials)
-      );
-      formData.append("instructor", JSON.stringify(courseData.instructor));
-
-      const response = await fetch(`${apiClient["baseUrl"]}/courses/courses/`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiClient.getAccessToken()}`,
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to create course");
-      }
-
-      return response.json();
+      return apiClient.post<Course>("/courses/courses/", payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: COURSE_KEYS.lists() });

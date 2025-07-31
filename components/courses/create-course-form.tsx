@@ -1,22 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { BookOpen } from "lucide-react";
+import {
+  BookOpen,
+  Play,
+  Clock,
+  Users,
+  Target,
+  BookOpenCheck,
+  GraduationCap,
+} from "lucide-react";
+import Image from "next/image";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Upload,
-  Plus,
-  Loader2,
-  Trash2,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Plus, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -25,14 +28,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Progress } from "@/components/ui/progress";
+import { MediaUpload } from "@/components/ui/media-upload";
 import {
   useCreateCourse,
   useCourseCategories,
   useCourseModules,
   useCreateCategory,
 } from "@/hooks/use-courses";
-import { uploadToS3, S3_FOLDERS } from "@/lib/s3-upload";
+import { useS3Upload } from "@/hooks/use-s3-upload";
+import { S3_FOLDERS, type S3FolderType } from "@/lib/s3-config";
 import type {
   CourseCurriculum,
   CourseModule,
@@ -47,6 +51,7 @@ export function CreateCourseForm() {
     preview_description: "",
     description: "",
     price: 0,
+    original_price: 0,
     estimated_time: "",
     level: "beginner",
     curriculum: [],
@@ -57,10 +62,6 @@ export function CreateCourseForm() {
   const [learningOutcomes, setLearningOutcomes] = useState<string[]>([""]);
   const [requiredMaterials, setRequiredMaterials] = useState<string[]>([""]);
 
-  const [uploadProgress, setUploadProgress] = useState<
-    Record<string, number | undefined>
-  >({});
-  const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
   const [newCategoryName, setNewCategoryName] = useState("");
 
   const router = useRouter();
@@ -68,6 +69,8 @@ export function CreateCourseForm() {
   const { data: categories } = useCourseCategories();
   const { data: modules } = useCourseModules();
   const { mutate: createCategory } = useCreateCategory();
+  const { uploadFile, getUploadState, clearError, cancelUpload, removeFile } =
+    useS3Upload();
 
   const steps = [
     {
@@ -95,31 +98,49 @@ export function CreateCourseForm() {
   const handleFileUpload = async (
     file: File,
     field: string,
-    folder: string
+    folder: S3FolderType
   ) => {
     try {
       // Clear any previous errors for this field
-      setUploadErrors((prev) => ({ ...prev, [field]: "" }));
+      clearError(field);
 
-      setUploadProgress((prev) => ({ ...prev, [field]: 0 }));
-      const url = await uploadToS3({
-        file,
-        folder,
-        onProgress: (progress) =>
-          setUploadProgress((prev) => ({ ...prev, [field]: progress })),
-      });
-      setFormData((prev) => ({ ...prev, [field]: url }));
-
-      // Clear progress after successful upload
-      setTimeout(() => {
-        setUploadProgress((prev) => ({ ...prev, [field]: undefined }));
-      }, 2000);
+      const url = await uploadFile(file, folder, field);
+      if (url) {
+        setFormData((prev) => ({ ...prev, [field]: url }));
+      }
+      return url;
     } catch (error) {
       console.error("Upload failed:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Upload failed";
-      setUploadErrors((prev) => ({ ...prev, [field]: errorMessage }));
-      setUploadProgress((prev) => ({ ...prev, [field]: undefined }));
+      return null;
+    }
+  };
+
+  const handleVideoUpload = async (
+    file: File,
+    field: string,
+    folder: S3FolderType
+  ) => {
+    try {
+      // Clear any previous errors for this field
+      clearError(field);
+
+      const url = await uploadFile(file, folder, field);
+      return url;
+    } catch (error) {
+      console.error("Upload failed:", error);
+      return null;
+    }
+  };
+
+  const handleCancelUpload = (field: string) => {
+    cancelUpload(field);
+  };
+
+  const handleRemoveFile = async (field: string) => {
+    const currentUrl = formData[field as keyof typeof formData] as string;
+    const success = await removeFile(field, currentUrl);
+    if (success) {
+      setFormData((prev) => ({ ...prev, [field]: null }));
     }
   };
 
@@ -128,7 +149,11 @@ export function CreateCourseForm() {
       title: "",
       order: formData.curriculum?.length || 0,
       video: [],
-      course_note: null,
+      course_note: {
+        title: "",
+        description: "",
+        note_file: null,
+      },
     };
     setFormData((prev) => ({
       ...prev,
@@ -167,36 +192,109 @@ export function CreateCourseForm() {
 
   const handleCreateCategory = () => {
     if (newCategoryName.trim()) {
-      createCategory({ name: newCategoryName.trim() });
-      setNewCategoryName("");
+      createCategory(
+        { name: newCategoryName.trim() },
+        {
+          onSuccess: (newCategory) => {
+            // Auto select the newly created category
+            setFormData((prev: any) => ({
+              ...prev,
+              category: { id: newCategory.id, name: newCategory.name },
+            }));
+            setNewCategoryName("");
+          },
+        }
+      );
     }
   };
 
   const handleSubmit = () => {
-    if (!formData.name || !formData.description) return;
+    if (
+      !formData.name ||
+      !formData.description ||
+      !formData.price ||
+      !formData.original_price ||
+      !formData.category ||
+      !formData.category.id
+    ) {
+      console.error("Missing required fields");
+      return;
+    }
 
-    // Convert arrays to Record<string, string> format
-    const convertArrayToRecord = (arr: string[]) => {
-      const record: Record<string, string> = {};
-      arr.forEach((item, index) => {
-        if (item.trim()) {
-          record[`item${index + 1}`] = item.trim();
+    // Validate that we have at least one non-empty value in each required array
+    const hasValidTargetAudience = targetAudience.some(
+      (item) => item && item.trim()
+    );
+    const hasValidLearningOutcomes = learningOutcomes.some(
+      (item) => item && item.trim()
+    );
+    const hasValidRequiredMaterials = requiredMaterials.some(
+      (item) => item && item.trim()
+    );
+
+    if (!hasValidTargetAudience) {
+      console.error("At least one target audience is required");
+      return;
+    }
+    if (!hasValidLearningOutcomes) {
+      console.error("At least one learning outcome is required");
+      return;
+    }
+    if (!hasValidRequiredMaterials) {
+      console.error("At least one required material is required");
+      return;
+    }
+
+    // Validate curriculum modules and videos
+    if (formData.curriculum) {
+      for (let i = 0; i < formData.curriculum.length; i++) {
+        const curriculumModule = formData.curriculum[i];
+        if (!curriculumModule.title.trim()) {
+          console.error(`Module ${i + 1} title is required`);
+          return;
         }
-      });
-      // Ensure at least one empty field if all are empty
-      if (Object.keys(record).length === 0) {
-        record["item1"] = "";
+        if (!curriculumModule.course_note?.title.trim()) {
+          console.error(`Module ${i + 1} course note title is required`);
+          return;
+        }
+        for (let j = 0; j < curriculumModule.video.length; j++) {
+          const video = curriculumModule.video[j];
+          if (!video.title.trim()) {
+            console.error(
+              `Video ${j + 1} in module ${i + 1} title is required`
+            );
+            return;
+          }
+        }
       }
+    }
+
+    // Convert arrays to Record<string, string> format - ensure at least one valid entry
+    const convertArrayToRecord = (arr: string[], prefix: string) => {
+      const record: Record<string, string> = {};
+      const validItems = arr.filter((item) => item && item.trim());
+
+      if (validItems.length > 0) {
+        validItems.forEach((item, index) => {
+          record[`${prefix}${index + 1}`] = item.trim();
+        });
+      } else {
+        // If no valid items, provide a default to satisfy backend requirements
+        record[`${prefix}1`] = "N/A";
+      }
+
       return record;
     };
 
     const courseData: CreateCourseData = {
       ...formData,
-      target_audience: convertArrayToRecord(targetAudience),
-      learning_outcomes: convertArrayToRecord(learningOutcomes),
-      required_materials: convertArrayToRecord(requiredMaterials),
+      target_audience: convertArrayToRecord(targetAudience, "audience"),
+      learning_outcomes: convertArrayToRecord(learningOutcomes, "outcome"),
+      required_materials: convertArrayToRecord(requiredMaterials, "name"),
       instructor: { user_id: "2" }, // Current user ID
     } as CreateCourseData;
+
+    console.log("Submitting course data:", courseData);
 
     createCourse(courseData, {
       onSuccess: () => {
@@ -209,12 +307,24 @@ export function CreateCourseForm() {
     switch (step) {
       case 0:
         return (
-          formData.name && formData.description && formData.preview_description
+          formData.name &&
+          formData.description &&
+          formData.preview_description &&
+          formData.price !== undefined &&
+          formData.price > 0 &&
+          formData.original_price !== undefined &&
+          formData.original_price > 0 &&
+          formData.category &&
+          formData.category.id
         );
       case 1:
         return formData.curriculum && formData.curriculum.length > 0;
       case 2:
-        return true;
+        return (
+          targetAudience.some((item) => item && item.trim()) &&
+          learningOutcomes.some((item) => item && item.trim()) &&
+          requiredMaterials.some((item) => item && item.trim())
+        );
       default:
         return true;
     }
@@ -266,9 +376,10 @@ export function CreateCourseForm() {
               formData={formData}
               setFormData={setFormData}
               categories={categories}
-              onFileUpload={handleFileUpload}
-              uploadProgress={uploadProgress}
-              uploadErrors={uploadErrors}
+              handleFileUpload={handleFileUpload}
+              getUploadState={getUploadState}
+              handleCancelUpload={handleCancelUpload}
+              handleRemoveFile={handleRemoveFile}
               newCategoryName={newCategoryName}
               setNewCategoryName={setNewCategoryName}
               onCreateCategory={handleCreateCategory}
@@ -283,9 +394,10 @@ export function CreateCourseForm() {
               onAddModule={addCurriculumModule}
               onUpdateModule={updateCurriculumModule}
               onAddVideo={addVideoToModule}
-              onFileUpload={handleFileUpload}
-              uploadProgress={uploadProgress}
-              uploadErrors={uploadErrors}
+              handleVideoUpload={handleVideoUpload}
+              getUploadState={getUploadState}
+              handleCancelUpload={handleCancelUpload}
+              handleRemoveFile={handleRemoveFile}
             />
           )}
 
@@ -350,12 +462,13 @@ function BasicInformationStep({
   formData,
   setFormData,
   categories,
-  onFileUpload,
-  uploadProgress,
-  uploadErrors,
+  getUploadState,
   newCategoryName,
   setNewCategoryName,
   onCreateCategory,
+  handleFileUpload,
+  handleCancelUpload,
+  handleRemoveFile,
 }: any) {
   return (
     <div className="space-y-6">
@@ -383,6 +496,22 @@ function BasicInformationStep({
               setFormData((prev: any) => ({
                 ...prev,
                 price: Number.parseInt(e.target.value) || 0,
+              }))
+            }
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="original_price">Original Price *</Label>
+          <Input
+            id="original_price"
+            type="number"
+            placeholder="1000"
+            value={formData.original_price || ""}
+            onChange={(e) =>
+              setFormData((prev: any) => ({
+                ...prev,
+                original_price: Number.parseInt(e.target.value) || 0,
               }))
             }
           />
@@ -423,23 +552,31 @@ function BasicInformationStep({
 
       <div className="grid grid-cols-3 gap-6">
         <div className="space-y-2">
-          <Label>Category</Label>
+          <Label>Category *</Label>
           <div className="flex space-x-2">
             <Select
-              value={formData.category?.name || ""}
-              onValueChange={(value) =>
-                setFormData((prev: any) => ({
-                  ...prev,
-                  category: { name: value },
-                }))
-              }
+              value={formData.category?.id || ""}
+              onValueChange={(value) => {
+                const selectedCategory = categories?.find(
+                  (cat: any) => cat.id === value
+                );
+                if (selectedCategory) {
+                  setFormData((prev: any) => ({
+                    ...prev,
+                    category: {
+                      id: selectedCategory.id,
+                      name: selectedCategory.name,
+                    },
+                  }));
+                }
+              }}
             >
               <SelectTrigger className="flex-1">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
                 {categories?.map((category: any) => (
-                  <SelectItem key={category.id} value={category.name}>
+                  <SelectItem key={category.id} value={category.id}>
                     {category.name}
                   </SelectItem>
                 ))}
@@ -495,80 +632,33 @@ function BasicInformationStep({
       </div>
 
       <div className="grid grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label>Course Image</Label>
-          <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file)
-                  onFileUpload(file, "course_image", S3_FOLDERS.COURSE_IMAGES);
-              }}
-              className="hidden"
-              id="course_image"
-            />
-            <Label htmlFor="course_image" className="cursor-pointer">
-              <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">
-                Click to upload course image
-              </p>
-            </Label>
-            {uploadProgress.course_image !== undefined && (
-              <Progress value={uploadProgress.course_image} className="mt-2" />
-            )}
-            {uploadErrors.course_image && (
-              <Alert variant="destructive" className="mt-2">
-                <AlertDescription className="text-xs">
-                  {uploadErrors.course_image}
-                </AlertDescription>
-              </Alert>
-            )}
-            {formData.course_image && (
-              <p className="text-xs text-green-600 mt-1">
-                ✓ Image uploaded successfully
-              </p>
-            )}
-          </div>
-        </div>
+        <MediaUpload
+          label="Course Image"
+          fieldKey="course_image"
+          accept="image/*"
+          currentUrl={formData.course_image}
+          uploadState={getUploadState("course_image")}
+          onFileSelect={(file) =>
+            handleFileUpload(file, "course_image", S3_FOLDERS.COURSE_IMAGES)
+          }
+          onCancel={() => handleCancelUpload("course_image")}
+          onRemove={() => handleRemoveFile("course_image")}
+          placeholder="Click to upload course image"
+        />
 
-        <div className="space-y-2">
-          <Label>Preview Video</Label>
-          <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-            <Input
-              type="file"
-              accept="video/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) onFileUpload(file, "preview_id", S3_FOLDERS.VIDEOS);
-              }}
-              className="hidden"
-              id="preview_video"
-            />
-            <Label htmlFor="preview_video" className="cursor-pointer">
-              <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">
-                Click to upload preview video
-              </p>
-            </Label>
-            {uploadProgress.preview_id !== undefined && (
-              <Progress value={uploadProgress.preview_id} className="mt-2" />
-            )}
-            {uploadErrors.preview_id && (
-              <Alert variant="destructive" className="mt-2">
-                <AlertDescription className="text-xs">
-                  {uploadErrors.preview_id}
-                </AlertDescription>
-              </Alert>
-            )}
-            {formData.preview_id && (
-              <p className="text-xs text-green-600 mt-1">
-                ✓ Video uploaded successfully
-              </p>
-            )}
-          </div>
-        </div>
+        <MediaUpload
+          label="Preview Video"
+          fieldKey="preview_id"
+          accept="video/*"
+          currentUrl={formData.preview_id}
+          uploadState={getUploadState("preview_id")}
+          onFileSelect={(file) =>
+            handleFileUpload(file, "preview_id", S3_FOLDERS.VIDEOS)
+          }
+          onCancel={() => handleCancelUpload("preview_id")}
+          onRemove={() => handleRemoveFile("preview_id")}
+          placeholder="Click to upload preview video"
+        />
       </div>
     </div>
   );
@@ -581,8 +671,10 @@ function CurriculumStep({
   onAddModule,
   onUpdateModule,
   onAddVideo,
-  onFileUpload,
-  uploadProgress,
+  handleVideoUpload,
+  getUploadState,
+  handleCancelUpload,
+  handleRemoveFile,
 }: any) {
   return (
     <div className="space-y-6">
@@ -704,43 +796,55 @@ function CurriculumStep({
                             });
                           }}
                         />
-                        <div className="space-y-2">
-                          <Input
-                            type="file"
+                        <div className="col-span-1">
+                          <MediaUpload
+                            label=""
+                            fieldKey={`video_${moduleIndex}_${videoIndex}`}
                             accept="video/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                const uploadKey = `video_${moduleIndex}_${videoIndex}`;
-                                onFileUpload(
-                                  file,
-                                  uploadKey,
-                                  S3_FOLDERS.VIDEOS
-                                ).then((url: string) => {
-                                  const updatedVideos = [...module.video];
-                                  updatedVideos[videoIndex] = {
-                                    ...video,
-                                    video_file: url,
-                                  };
-                                  onUpdateModule(moduleIndex, {
-                                    video: updatedVideos,
-                                  });
+                            currentUrl={video.video_file || undefined}
+                            uploadState={getUploadState(
+                              `video_${moduleIndex}_${videoIndex}`
+                            )}
+                            onFileSelect={async (file) => {
+                              const uploadKey = `video_${moduleIndex}_${videoIndex}`;
+                              const url = await handleVideoUpload(
+                                file,
+                                uploadKey,
+                                S3_FOLDERS.VIDEOS
+                              );
+                              if (url) {
+                                const updatedVideos = [...module.video];
+                                updatedVideos[videoIndex] = {
+                                  ...video,
+                                  video_file: url,
+                                };
+                                onUpdateModule(moduleIndex, {
+                                  video: updatedVideos,
                                 });
                               }
                             }}
+                            onCancel={() =>
+                              handleCancelUpload(
+                                `video_${moduleIndex}_${videoIndex}`
+                              )
+                            }
+                            onRemove={() => {
+                              handleRemoveFile(
+                                `video_${moduleIndex}_${videoIndex}`,
+                                video.video_file
+                              );
+                              const updatedVideos = [...module.video];
+                              updatedVideos[videoIndex] = {
+                                ...video,
+                                video_file: null,
+                              };
+                              onUpdateModule(moduleIndex, {
+                                video: updatedVideos,
+                              });
+                            }}
+                            placeholder="Upload video file"
                             className="text-xs"
                           />
-                          {uploadProgress[
-                            `video_${moduleIndex}_${videoIndex}`
-                          ] !== undefined && (
-                            <Progress
-                              value={
-                                uploadProgress[
-                                  `video_${moduleIndex}_${videoIndex}`
-                                ]
-                              }
-                            />
-                          )}
                         </div>
                       </div>
                     )
@@ -961,95 +1065,367 @@ function ReviewStep({
   requiredMaterials: string[];
 }) {
   return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-semibold">Review Your Course</h3>
+    <div className="space-y-8">
+      <div className="text-center space-y-2">
+        <h3 className="text-2xl font-bold flex items-center justify-center gap-2">
+          <BookOpenCheck className="h-6 w-6 text-blue-600" />
+          Course Preview
+        </h3>
+        <p className="text-muted-foreground">
+          Review your course before publishing
+        </p>
+      </div>
 
-      <div className="grid gap-6">
+      {/* Hero Section with Course Image and Preview Video */}
+      <Card className="overflow-hidden">
+        <div className="grid md:grid-cols-2 gap-6 p-6">
+          {/* Course Image */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-lg">Course Image</h4>
+            {formData.course_image ? (
+              <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+                <Image
+                  src={formData.course_image}
+                  alt={formData.name || "Course image"}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              <div className="aspect-video rounded-lg bg-gray-100 flex items-center justify-center">
+                <div className="text-center text-gray-500">
+                  <BookOpen className="h-12 w-12 mx-auto mb-2" />
+                  <p>No course image uploaded</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Preview Video */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-lg">Preview Video</h4>
+            {formData.preview_id ? (
+              <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
+                <video
+                  controls
+                  className="w-full h-full"
+                  poster={formData.course_image || undefined}
+                >
+                  <source src={formData.preview_id} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            ) : (
+              <div className="aspect-video rounded-lg bg-gray-100 flex items-center justify-center">
+                <div className="text-center text-gray-500">
+                  <Play className="h-12 w-12 mx-auto mb-2" />
+                  <p>No preview video uploaded</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </Card>
+
+      {/* Course Basic Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <GraduationCap className="h-5 w-5 text-blue-600" />
+            Course Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold text-lg mb-2">{formData.name}</h4>
+                <Badge variant="secondary" className="mb-2">
+                  {formData.category?.name}
+                </Badge>
+                <p className="text-muted-foreground">
+                  {formData.preview_description}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-1">
+                  <Clock className="h-4 w-4 text-gray-500" />
+                  <span>{formData.estimated_time}</span>
+                </div>
+                <Badge variant="outline">{formData.level}</Badge>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  {/* <Pounds className="h-5 w-5 text-green-600" /> */}£
+                  <span className="font-semibold">Pricing</span>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl font-bold text-green-600">
+                      £{formData.price}
+                    </span>
+                    {formData.original_price > formData.price && (
+                      <span className="text-lg text-gray-500 line-through">
+                        £{formData.original_price}
+                      </span>
+                    )}
+                  </div>
+                  {formData.original_price > formData.price && (
+                    <Badge variant="destructive" className="text-xs">
+                      {Math.round(
+                        ((formData.original_price - formData.price) /
+                          formData.original_price) *
+                          100
+                      )}
+                      % OFF
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h5 className="font-semibold mb-2">Description</h5>
+            <p className="text-muted-foreground leading-relaxed">
+              {formData.description}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Curriculum with Video Previews */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-blue-600" />
+            Course Curriculum
+            <Badge variant="secondary" className="ml-auto">
+              {formData.curriculum?.length || 0} Modules
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {formData.curriculum?.map(
+            (curriculumModule: any, moduleIndex: number) => (
+              <div
+                key={moduleIndex}
+                className="border rounded-lg p-4 space-y-4"
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h5 className="font-semibold">
+                      Module {moduleIndex + 1}: {curriculumModule.title}
+                    </h5>
+                    {curriculumModule.course_note?.title && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        📝 {curriculumModule.course_note.title}
+                      </p>
+                    )}
+                  </div>
+                  <Badge variant="outline">
+                    {curriculumModule.video?.length || 0} Videos
+                  </Badge>
+                </div>
+
+                {curriculumModule.course_note?.description && (
+                  <p className="text-sm text-muted-foreground bg-gray-50 dark:bg-gray-900 p-3 rounded">
+                    {curriculumModule.course_note.description}
+                  </p>
+                )}
+
+                {/* Videos Grid */}
+                {curriculumModule.video?.length > 0 && (
+                  <div className="space-y-3">
+                    <h6 className="font-medium text-sm">Videos:</h6>
+                    <div className="grid gap-4">
+                      {curriculumModule.video.map(
+                        (video: any, videoIndex: number) => (
+                          <div
+                            key={videoIndex}
+                            className="border rounded-lg p-3"
+                          >
+                            <div className="flex items-start gap-3">
+                              {video.video_file ? (
+                                <div className="relative w-32 h-18 rounded overflow-hidden bg-black flex-shrink-0">
+                                  <video
+                                    controls
+                                    className="w-full h-full object-cover"
+                                    preload="metadata"
+                                  >
+                                    <source
+                                      src={video.video_file}
+                                      type="video/mp4"
+                                    />
+                                  </video>
+                                </div>
+                              ) : (
+                                <div className="w-32 h-18 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
+                                  <Play className="h-6 w-6 text-gray-400" />
+                                </div>
+                              )}
+
+                              <div className="flex-1 min-w-0">
+                                <h6 className="font-medium truncate">
+                                  {video.title || `Video ${videoIndex + 1}`}
+                                </h6>
+                                {video.description && (
+                                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                    {video.description}
+                                  </p>
+                                )}
+                                {video.duration && (
+                                  <div className="flex items-center gap-1 mt-1">
+                                    <Clock className="h-3 w-3 text-gray-400" />
+                                    <span className="text-xs text-muted-foreground">
+                                      {video.duration}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          )}
+
+          {(!formData.curriculum || formData.curriculum.length === 0) && (
+            <div className="text-center py-8 text-muted-foreground">
+              <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No curriculum modules added yet</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Additional Course Information */}
+      <div className="grid md:grid-cols-3 gap-6">
+        {/* Target Audience */}
         <Card>
           <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div>
-              <strong>Name:</strong> {formData.name}
-            </div>
-            <div>
-              <strong>Price:</strong> ${formData.price}
-            </div>
-            <div>
-              <strong>Level:</strong> {formData.level}
-            </div>
-            <div>
-              <strong>Duration:</strong> {formData.estimated_time}
-            </div>
-            <div>
-              <strong>Category:</strong> {formData.category?.name}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Curriculum</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Users className="h-4 w-4 text-blue-600" />
+              Target Audience
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div>
-              <strong>Modules:</strong> {formData.curriculum?.length || 0}
-            </div>
-            <div>
-              <strong>Total Videos:</strong>{" "}
-              {formData.curriculum?.reduce(
-                (acc: number, module: any) => acc + module.video.length,
-                0
-              ) || 0}
-            </div>
+            <ul className="space-y-2">
+              {targetAudience
+                .filter((audience: string) => audience.trim())
+                .map((audience: string, index: number) => (
+                  <li key={index} className="flex items-start gap-2 text-sm">
+                    <Target className="h-3 w-3 text-blue-500 mt-1 flex-shrink-0" />
+                    <span>{audience}</span>
+                  </li>
+                ))}
+            </ul>
+            {targetAudience.filter((a) => a.trim()).length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                No target audience specified
+              </p>
+            )}
           </CardContent>
         </Card>
 
+        {/* Learning Outcomes */}
         <Card>
           <CardHeader>
-            <CardTitle>Course Details</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <BookOpenCheck className="h-4 w-4 text-green-600" />
+              Learning Outcomes
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <strong>Target Audience:</strong>
-              <ul className="list-disc list-inside mt-1">
-                {targetAudience
-                  .filter((audience: string) => audience.trim())
-                  .map((audience: string, index: number) => (
-                    <li key={index} className="text-sm">
-                      {audience}
-                    </li>
-                  ))}
-              </ul>
-            </div>
-            <div>
-              <strong>Learning Outcomes:</strong>
-              <ul className="list-disc list-inside mt-1">
-                {learningOutcomes
-                  .filter((outcome: string) => outcome.trim())
-                  .map((outcome: string, index: number) => (
-                    <li key={index} className="text-sm">
-                      {outcome}
-                    </li>
-                  ))}
-              </ul>
-            </div>
-            <div>
-              <strong>Required Materials:</strong>
-              <ul className="list-disc list-inside mt-1">
-                {requiredMaterials
-                  .filter((material: string) => material.trim())
-                  .map((material: string, index: number) => (
-                    <li key={index} className="text-sm">
-                      {material}
-                    </li>
-                  ))}
-              </ul>
-            </div>
+          <CardContent>
+            <ul className="space-y-2">
+              {learningOutcomes
+                .filter((outcome: string) => outcome.trim())
+                .map((outcome: string, index: number) => (
+                  <li key={index} className="flex items-start gap-2 text-sm">
+                    <div className="w-3 h-3 bg-green-500 rounded-full mt-1 flex-shrink-0" />
+                    <span>{outcome}</span>
+                  </li>
+                ))}
+            </ul>
+            {learningOutcomes.filter((o) => o.trim()).length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                No learning outcomes specified
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Required Materials */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <BookOpen className="h-4 w-4 text-orange-600" />
+              Required Materials
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              {requiredMaterials
+                .filter((material: string) => material.trim())
+                .map((material: string, index: number) => (
+                  <li key={index} className="flex items-start gap-2 text-sm">
+                    <div className="w-3 h-3 bg-orange-500 rounded-full mt-1 flex-shrink-0" />
+                    <span>{material}</span>
+                  </li>
+                ))}
+            </ul>
+            {requiredMaterials.filter((m) => m.trim()).length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                No required materials specified
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Summary Statistics */}
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div>
+              <div className="text-2xl font-bold text-blue-600">
+                {formData.curriculum?.length || 0}
+              </div>
+              <div className="text-sm text-muted-foreground">Modules</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-green-600">
+                {formData.curriculum?.reduce(
+                  (acc: number, module: any) =>
+                    acc + (module.video?.length || 0),
+                  0
+                ) || 0}
+              </div>
+              <div className="text-sm text-muted-foreground">Videos</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-orange-600">
+                {targetAudience.filter((a) => a.trim()).length}
+              </div>
+              <div className="text-sm text-muted-foreground">Target Groups</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-purple-600">
+                {learningOutcomes.filter((o) => o.trim()).length}
+              </div>
+              <div className="text-sm text-muted-foreground">Outcomes</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

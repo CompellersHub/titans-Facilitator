@@ -8,7 +8,14 @@ const nextConfig: NextConfig = {
       "titanscareers.com",
       "titanscareers.s3.amazonaws.com",
       "api.titanscareers.com",
+      "titanscareers.s3.eu-north-1.amazonaws.com",
     ],
+  },
+
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "1024mb", // Increase limit to 100MB for video uploads
+    },
   },
 };
 

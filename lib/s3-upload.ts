@@ -1,4 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+// DEPRECATED: This file has been replaced by server actions
+// Use /app/actions/s3-upload.ts instead
+// TODO: Remove this file after migration is complete
+
 // AWS S3 Upload utility
 import {
   S3Client,

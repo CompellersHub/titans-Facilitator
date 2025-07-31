@@ -275,7 +275,7 @@ function CourseCard({ course, studentId }: { course: any; studentId: string }) {
               {course.preview_description || "No description available"}
             </CardDescription>
           </div>
-          <Badge variant="outline">£{course.price}</Badge>
+          <Badge variant="outline">${course.price}</Badge>
         </div>
       </CardHeader>
       <CardContent>
