@@ -13,6 +13,7 @@ import {
   // Settings,
   Users,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -75,7 +76,14 @@ export function DashboardSidebar({
       <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-            <GraduationCap className="h-5 w-5 text-primary-foreground" />
+            {/* <GraduationCap className="h-5 w-5 text-primary-foreground" /> */}
+            {/* use the log image */}
+            <Image
+              alt="Titans Career Logo"
+              src="https://titanscareers.com/assets/logo-DMzVeG9H.png"
+              width={32}
+              height={32}
+            />
           </div>
           {(open || isMobile) && (
             <span className="font-semibold text-black">TITANS CAREER</span>
