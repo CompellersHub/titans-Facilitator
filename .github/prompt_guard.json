@@ -1,0 +1,191 @@
+{
+  "ui_generation_guard": {
+    "design_system": {
+      "layout_principles": {
+        "structure": "split_hero_with_demo",
+        "grid": "asymmetric_two_column",
+        "left_content_weight": "40%",
+        "right_demo_weight": "60%",
+        "spacing": "generous_whitespace",
+        "alignment": "left_aligned_content_right_aligned_demo"
+      },
+      "visual_hierarchy": {
+        "primary_headline": {
+          "typography": "large_bold_display",
+          "weight": "700-900",
+          "size_scale": "3xl_to_5xl",
+          "line_height": "tight",
+          "color_treatment": "high_contrast_dark"
+        },
+        "supporting_text": {
+          "typography": "medium_body",
+          "weight": "400-500",
+          "color_treatment": "medium_contrast_gray",
+          "line_height": "relaxed"
+        },
+        "cta_hierarchy": {
+          "primary_cta": "prominent_branded_button",
+          "secondary_cta": "subtle_text_link_with_arrow",
+          "visual_separation": "vertical_stack_with_spacing"
+        }
+      },
+      "color_psychology": {
+        "primary_brand": "vibrant_purple_blue_gradient",
+        "trust_indicators": "muted_professional_grays",
+        "accent_highlights": "selective_color_pops",
+        "background": "clean_light_neutral"
+      }
+    },
+    "conversion_optimization": {
+      "hero_section": {
+        "headline_structure": {
+          "pattern": "benefit_focused_promise",
+          "tone": "confident_minimal_friendly",
+          "keywords": ["super", "minimal", "easy", "simple"],
+          "length": "4-8_words_per_line_3_lines_max"
+        },
+        "value_proposition": {
+          "focus": "ease_of_use_and_customization",
+          "target_audience": "individuals_businesses_developers",
+          "pain_point_addressed": "complex_scheduling_software",
+          "positioning": "simple_alternative_to_complex_tools"
+        },
+        "social_proof_placement": {
+          "location": "below_fold_or_bottom_section",
+          "format": "logo_wall_with_trust_copy",
+          "message": "trusted_by_fast_growing_companies"
+        }
+      },
+      "demo_integration": {
+        "visual_proof": "live_product_preview",
+        "interaction_hint": "calendar_booking_flow",
+        "credibility_signals": [
+          "real_user_avatar",
+          "actual_service_details",
+          "timezone_handling"
+        ],
+        "feature_highlights": [
+          "video_call_integration",
+          "time_duration_clarity",
+          "timezone_awareness"
+        ]
+      },
+      "cta_optimization": {
+        "primary_action": {
+          "text_pattern": "signup_with_[social_provider]",
+          "visual_treatment": "gradient_branded_button",
+          "psychological_trigger": "oauth_trust_and_ease",
+          "placement": "above_fold_prominent"
+        },
+        "secondary_action": {
+          "text_pattern": "signup_with_[alternative_method]",
+          "visual_treatment": "minimal_underline_link",
+          "psychological_trigger": "choice_and_control"
+        },
+        "friction_reduction": {
+          "no_credit_card_message": "explicitly_stated",
+          "placement": "directly_below_cta",
+          "styling": "subtle_reassuring_text"
+        }
+      }
+    },
+    "layout_requirements": {
+      "header_navigation": {
+        "logo_placement": "top_left",
+        "logo_style": "icon_plus_wordmark",
+        "nav_items": ["about", "features", "pricing", "resources"],
+        "account_actions": ["sign_in", "get_started_cta"],
+        "styling": "minimal_clean_spacing"
+      },
+      "hero_content_section": {
+        "max_width": "400-500px",
+        "vertical_centering": true,
+        "content_order": [
+          "headline",
+          "description_paragraph",
+          "primary_cta",
+          "secondary_cta",
+          "trust_indicator_text"
+        ]
+      },
+      "demo_section": {
+        "background": "elevated_card_with_subtle_shadow",
+        "border_radius": "modern_rounded_corners",
+        "content": "interactive_calendar_booking_widget",
+        "positioning": "slightly_elevated_perspective"
+      },
+      "trust_section": {
+        "placement": "bottom_of_viewport",
+        "content": "company_logo_showcase",
+        "styling": "muted_grayscale_logos",
+        "layout": "horizontal_scroll_or_grid"
+      }
+    },
+    "interaction_patterns": {
+      "button_behaviors": {
+        "hover_states": "subtle_elevation_and_color_shift",
+        "active_states": "gentle_scale_down",
+        "loading_states": "spinner_or_progress_indication"
+      },
+      "demo_interactivity": {
+        "calendar_navigation": "month_switching_arrows",
+        "date_selection": "highlight_available_dates",
+        "booking_flow": "realistic_multi_step_preview"
+      }
+    },
+    "responsive_behavior": {
+      "desktop": "side_by_side_layout",
+      "tablet": "stacked_layout_demo_below_content",
+      "mobile": "single_column_demo_becomes_smaller_preview",
+      "breakpoint_considerations": "maintain_visual_hierarchy_at_all_sizes"
+    },
+    "copy_guidelines": {
+      "headline_tone": "confident_but_not_boastful",
+      "description_focus": "target_audience_and_use_cases",
+      "cta_psychology": "action_oriented_with_social_proof",
+      "trust_language": "specific_credible_metrics",
+      "overall_voice": "professional_friendly_accessible"
+    },
+    "performance_requirements": {
+      "loading_priority": "above_fold_content_first",
+      "image_optimization": "demo_screenshots_optimized",
+      "font_loading": "critical_typography_preloaded",
+      "interactive_elements": "immediate_feedback_on_interaction"
+    },
+    "accessibility_standards": {
+      "color_contrast": "wcag_aa_minimum",
+      "keyboard_navigation": "full_tab_order_support",
+      "screen_reader": "semantic_html_and_aria_labels",
+      "focus_indicators": "clear_visible_focus_states"
+    }
+  },
+  "generation_instructions": {
+    "mandatory_elements": [
+      "Split hero layout with content left, demo right",
+      "Prominent branded CTA button",
+      "Live product demo or preview",
+      "Trust indicators below the fold",
+      "Minimal navigation header",
+      "No credit card required messaging"
+    ],
+    "flexibility_zones": [
+      "Exact color palette (maintain contrast principles)",
+      "Specific copy (maintain tone and structure)",
+      "Logo and branding details",
+      "Exact feature highlights in demo"
+    ],
+    "conversion_critical_elements": [
+      "Clear value proposition in headline",
+      "Social login CTA as primary action",
+      "Friction reduction messaging",
+      "Visual product proof",
+      "Trust signals placement"
+    ],
+    "quality_standards": {
+      "visual_polish": "production_ready_with_attention_to_details",
+      "interaction_design": "smooth_purposeful_animations",
+      "content_hierarchy": "scannable_progressive_disclosure",
+      "brand_consistency": "cohesive_design_system_application"
+    }
+  }
+}
