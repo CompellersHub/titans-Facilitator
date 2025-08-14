@@ -28,15 +28,38 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { useCourse } from "@/hooks/use-courses";
+import { useCourse, useDeleteCourse } from "@/hooks/use-courses";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface CourseDetailsProps {
   courseId: string;
 }
 
 export function CourseDetails({ courseId }: CourseDetailsProps) {
+  const router = useRouter();
   const { data: course, isLoading, error } = useCourse(courseId);
+  const { mutate: deleteCourse, isPending: isDeleting } = useDeleteCourse();
+
+  const handleDelete = () => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this course? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    deleteCourse(courseId, {
+      onSuccess: () => {
+        window.location.href = "/courses";
+      },
+      onError: (error) => {
+        console.error("Failed to delete course:", error);
+        alert("Failed to delete course. Please try again.");
+      },
+    });
+  };
 
   if (error) {
     return (
@@ -82,9 +105,14 @@ export function CourseDetails({ courseId }: CourseDetailsProps) {
             <Edit className="mr-2 h-4 w-4" />
             Edit Course
           </Button>
-          <Button variant="outline" className="text-destructive bg-transparent">
+          <Button
+            variant="outline"
+            className="text-destructive bg-transparent"
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete
+            {isDeleting ? "Deleting..." : "Delete"}
           </Button>
         </div>
       </div>

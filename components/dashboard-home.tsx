@@ -85,7 +85,7 @@ export function DashboardHome() {
         </Alert>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 bg-blue-100 dark:bg-black p-2">
         <StatsCard
           title="Total Courses"
           value={courses?.length}

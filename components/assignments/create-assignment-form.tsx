@@ -58,6 +58,7 @@ export function CreateAssignmentForm() {
       due_date: dueDate.toISOString(),
       total_marks: totalMarks ? Number.parseInt(totalMarks) : undefined,
       file,
+      teacher: courses ? courses[0].instructor : undefined,
     };
 
     createAssignment(assignmentData, {

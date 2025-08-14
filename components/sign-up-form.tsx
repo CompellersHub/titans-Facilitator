@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { CourseAutocomplete } from "./ui/course-autocomplete";
 import { ModeToggle } from "@/components/mode-toggle";
+import { useTheme } from "next-themes";
 
 interface SignUpData {
   email: string;
@@ -84,23 +85,8 @@ export function SignUpForm() {
 
       const data = await response.json();
 
-      // Check if the response indicates OTP verification is needed
-      if (data.next_step === "verify_otp" && data.teacher_id && data.email) {
-        // Redirect to OTP verification page with necessary data
-        const params = new URLSearchParams({
-          teacher_id: data.teacher_id,
-          email: data.email,
-          message:
-            data.message ||
-            "OTP sent to your email. Please verify to complete registration.",
-        });
-        router.push(`/verify-otp?${params.toString()}`);
-      } else {
-        // Fallback to login page if response structure is different
-        router.push(
-          "/login?message=Account created successfully! Please log in."
-        );
-      }
+      // On successful signup, redirect to success page
+      router.push("/signup-success");
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error
@@ -117,14 +103,17 @@ export function SignUpForm() {
   );
 
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-6">
-      {/* Mode Toggle */}
-      <div className="absolute top-4 right-4">
-        <ModeToggle />
-      </div>
-
-      {/* Header */}
-      <div className="text-center space-y-4">
+    <div className="w-full max-w-3xl mx-auto space-y-6 flex flex-col justify-center items-center">
+      <nav className="flex items-center justify-between w-full">
+        <div className="p-2 dark:bg-slate-300">
+          <Image
+            src="https://titanscareers.com/assets/logo-DMzVeG9H.png"
+            alt="Titans Career"
+            width={150}
+            height={150}
+            className="rounded-xl"
+          />
+        </div>
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
@@ -132,20 +121,18 @@ export function SignUpForm() {
           <ArrowLeft className="w-4 h-4" />
           Back to Home
         </Link>
+      </nav>
 
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <div className="relative">
-            <Image
-              src="https://titanscareers.com/assets/logo-DMzVeG9H.png"
-              alt="Titans Career"
-              width={64}
-              height={64}
-              className="rounded-xl"
-            />
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background animate-pulse" />
-          </div>
+      {/* Mode Toggle */}
+      {/* <div className="absolute top-10 right-10">
+        <ModeToggle />
+      </div> */}
+
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <div className="flex items-center justify-center gap-3">
           <div>
-            <h1 className="text-2xl font-bold">Join Titans Careers</h1>
+            <h1 className="text-4xl font-bold">Join Titans Careers</h1>
             <p className="text-muted-foreground text-sm">
               Start building careers that matter ✨
             </p>
@@ -153,7 +140,7 @@ export function SignUpForm() {
         </div>
 
         {/* Stats */}
-        <div className="flex items-center justify-center gap-6 mb-8">
+        {/* <div className="flex items-center justify-center gap-6 mb-8">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Users className="w-4 h-4 text-primary" />
             <span>10K+ Students</span>
@@ -166,11 +153,11 @@ export function SignUpForm() {
             <Sparkles className="w-4 h-4 text-primary" />
             <span>AI-Powered</span>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Form Card */}
-      <Card className="border-0 shadow-md">
+      <Card className="border-0 shadow-sm max-w-2xl bg-blue-50 dark:bg-slate-900">
         <CardHeader className="text-center space-y-1 pb-4">
           <CardTitle className="text-xl">Create Your Account</CardTitle>
           <CardDescription>

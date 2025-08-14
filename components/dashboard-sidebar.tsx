@@ -75,14 +75,14 @@ export function DashboardSidebar({
     <>
       <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
+          <div className="flex h-12 w-12 items-center justify-center rounded-md">
             {/* <GraduationCap className="h-5 w-5 text-primary-foreground" /> */}
             {/* use the log image */}
             <Image
               alt="Titans Career Logo"
               src="https://titanscareers.com/assets/logo-DMzVeG9H.png"
-              width={32}
-              height={32}
+              width={100}
+              height={100}
             />
           </div>
           {(open || isMobile) && (
@@ -110,8 +110,8 @@ export function DashboardSidebar({
               href={item.href}
               onClick={isMobile ? onMobileLinkClick : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-primary hover:text-white",
-                pathname === item.href ? "bg-primary text-white" : "text-black",
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-primary hover:text-background",
+                pathname === item.href && "bg-primary text-background",
                 !open && !isMobile && "justify-center"
               )}
             >
@@ -151,18 +151,14 @@ export function DashboardSidebar({
 
   // For mobile, just return the content (will be wrapped in Sheet)
   if (isMobile) {
-    return (
-      <div className="flex flex-col h-full bg-sidebar-background text-white">
-        {sidebarContent}
-      </div>
-    );
+    return <div className="flex flex-col h-full">{sidebarContent}</div>;
   }
 
   // For desktop, return the full sidebar with responsive behavior
   return (
     <div
       className={cn(
-        "hidden lg:flex fixed inset-y-0 left-0 z-50 flex-col bg-sidebar-background text-white transition-all duration-300 ease-in-out",
+        "hidden lg:flex fixed inset-y-0 left-0 z-50 flex-col transition-all duration-300 ease-in-out",
         open ? "w-64" : "w-20"
       )}
     >

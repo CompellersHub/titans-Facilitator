@@ -36,6 +36,8 @@ export function AssignmentDetails({ assignmentId }: AssignmentDetailsProps) {
   const { data: submissions, isLoading: submissionsLoading } =
     useAssignmentSubmissions(assignmentId);
 
+  console.log(submissions);
+
   if (error) {
     return (
       <Alert variant="destructive">
@@ -172,11 +174,11 @@ export function AssignmentDetails({ assignmentId }: AssignmentDetailsProps) {
                 </div>
                 <div>
                   <p className="font-medium">
-                    {assignment.teacher.first_name}{" "}
-                    {assignment.teacher.last_name}
+                    {assignment?.teacher?.first_name}{" "}
+                    {assignment?.teacher?.last_name}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {assignment.teacher.role}
+                    {assignment?.teacher?.role}
                   </p>
                 </div>
               </div>

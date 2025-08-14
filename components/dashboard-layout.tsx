@@ -19,6 +19,8 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { LogOut, Settings, User } from "lucide-react";
+import { DialogTitle } from "@radix-ui/react-dialog";
+import { ModeToggle } from "./mode-toggle";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -57,6 +59,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-80 p-0">
+                <DialogTitle></DialogTitle>
                 <DashboardSidebar
                   open={true}
                   setOpen={() => {}}
@@ -71,7 +74,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </h1>
           </div>
           <div className="flex items-center gap-4">
-            {/* <ModeToggle /> */}
             <Button variant="ghost" size="icon">
               <Bell className="h-5 w-5" />
               <span className="sr-only">Notifications</span>
@@ -84,7 +86,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarImage
-                      src="/placeholder-user.jpg"
+                      //src="/placeholder-user.jpg"
                       alt={user?.first_name || "User"}
                     />
                     <AvatarFallback>
@@ -121,12 +123,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            <ModeToggle />
           </div>
         </header>
         <main className="flex-1 overflow-auto p-4 lg:p-6">
           {pathname !== "/" && (
             <div
-              className="flex gap-1 bg-gray-100 p-1 w-fit rounded-md text-sm mb-2 cursor-pointer"
+              className="flex gap-1 bg-neutral-300 p-1 w-fit rounded-md text-sm mb-2 cursor-pointer"
               onClick={handleNavigateBack}
             >
               <ChevronLeft className="text-sm" />

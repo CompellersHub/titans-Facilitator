@@ -57,7 +57,7 @@ export function CreateCourseForm() {
     curriculum: [],
   });
 
-  // Separate state for dynamic arrays
+  // Separate state for dynamic arrays - exactly 4 items each as required by API
   const [targetAudience, setTargetAudience] = useState<string[]>([""]);
   const [learningOutcomes, setLearningOutcomes] = useState<string[]>([""]);
   const [requiredMaterials, setRequiredMaterials] = useState<string[]>([""]);
@@ -151,13 +151,20 @@ export function CreateCourseForm() {
       video: [],
       course_note: {
         title: "",
-        description: "",
+        description: null,
         note_file: null,
       },
     };
     setFormData((prev) => ({
       ...prev,
       curriculum: [...(prev.curriculum || []), newModule],
+    }));
+  };
+
+  const removeCurriculumModule = () => {
+    setFormData((prev) => ({
+      ...prev,
+      curriculum: prev.curriculum?.slice(0, -1),
     }));
   };
 
@@ -171,6 +178,7 @@ export function CreateCourseForm() {
         i === index ? { ...module, ...updates } : module
       ),
     }));
+    console.log("Updated Curriculum Module:", { index, updates });
   };
 
   const addVideoToModule = (moduleIndex: number) => {
@@ -245,6 +253,8 @@ export function CreateCourseForm() {
       return;
     }
 
+    console.log(formData.curriculum);
+
     // Validate curriculum modules and videos
     if (formData.curriculum) {
       for (let i = 0; i < formData.curriculum.length; i++) {
@@ -253,7 +263,8 @@ export function CreateCourseForm() {
           console.error(`Module ${i + 1} title is required`);
           return;
         }
-        if (!curriculumModule.course_note?.title.trim()) {
+        // Ensure course_note has proper structure
+        if (!curriculumModule.course_note?.title?.trim()) {
           console.error(`Module ${i + 1} course note title is required`);
           return;
         }
@@ -269,25 +280,33 @@ export function CreateCourseForm() {
       }
     }
 
-    // Convert arrays to Record<string, string> format - ensure at least one valid entry
+    // Convert arrays to Record<string, string> format - ensure exactly 4 entries
     const convertArrayToRecord = (arr: string[], prefix: string) => {
       const record: Record<string, string> = {};
-      const validItems = arr.filter((item) => item && item.trim());
 
-      if (validItems.length > 0) {
-        validItems.forEach((item, index) => {
-          record[`${prefix}${index + 1}`] = item.trim();
-        });
-      } else {
-        // If no valid items, provide a default to satisfy backend requirements
-        record[`${prefix}1`] = "N/A";
+      // Always create exactly 4 entries as required by API
+      for (let i = 0; i < 4; i++) {
+        const value = arr[i]?.trim() || "";
+        record[`${prefix}${i + 1}`] = value;
       }
 
       return record;
     };
 
+    // Process curriculum to ensure course_note description is handled properly
+    const processedCurriculum =
+      formData.curriculum?.map((module) => ({
+        ...module,
+        course_note: {
+          title: module.course_note?.title?.trim() || "Course Notes",
+          description: module.course_note?.description || null,
+          note_file: module.course_note?.note_file || null,
+        },
+      })) || [];
+
     const courseData: CreateCourseData = {
       ...formData,
+      curriculum: processedCurriculum,
       target_audience: convertArrayToRecord(targetAudience, "audience"),
       learning_outcomes: convertArrayToRecord(learningOutcomes, "outcome"),
       required_materials: convertArrayToRecord(requiredMaterials, "name"),
@@ -318,12 +337,31 @@ export function CreateCourseForm() {
           formData.category.id
         );
       case 1:
-        return formData.curriculum && formData.curriculum.length > 0;
+        return (
+          formData.curriculum &&
+          formData.curriculum.length > 0 &&
+          formData.curriculum.every(
+            (module) =>
+              module.title &&
+              module.title.trim() &&
+              // module.video.length > 0 &&
+              // module.video.every(
+              //   (video) => video.title && video.title.trim()
+              // ) &&
+              module.course_note &&
+              module.course_note.title &&
+              module.course_note.title.trim() &&
+              (!module.course_note.description ||
+                Object.values(module.course_note.description).every(
+                  (desc) => desc && desc.trim()
+                ))
+          )
+        );
       case 2:
         return (
-          targetAudience.some((item) => item && item.trim()) &&
-          learningOutcomes.some((item) => item && item.trim()) &&
-          requiredMaterials.some((item) => item && item.trim())
+          targetAudience.every((item) => item && item.trim()) &&
+          learningOutcomes.every((item) => item && item.trim()) &&
+          requiredMaterials.every((item) => item && item.trim())
         );
       default:
         return true;
@@ -392,6 +430,7 @@ export function CreateCourseForm() {
               setFormData={setFormData}
               modules={modules}
               onAddModule={addCurriculumModule}
+              onRemoveModule={removeCurriculumModule}
               onUpdateModule={updateCurriculumModule}
               onAddVideo={addVideoToModule}
               handleVideoUpload={handleVideoUpload}
@@ -669,6 +708,7 @@ function CurriculumStep({
   setFormData,
   modules,
   onAddModule,
+  onRemoveModule,
   onUpdateModule,
   onAddVideo,
   handleVideoUpload,
@@ -676,6 +716,37 @@ function CurriculumStep({
   handleCancelUpload,
   handleRemoveFile,
 }: any) {
+  const updateModuleTitle = (moduleIndex: number, title: string) => {
+    onUpdateModule(moduleIndex, { title });
+  };
+
+  const updateCourseNoteTitle = (moduleIndex: number, title: string) => {
+    const module = formData.curriculum[moduleIndex];
+    onUpdateModule(moduleIndex, {
+      course_note: {
+        ...module.course_note,
+        title,
+      },
+    });
+  };
+
+  const updateCourseNoteDescription = (
+    moduleIndex: number,
+    description: string
+  ) => {
+    const module = formData.curriculum[moduleIndex];
+    // Convert string to dictionary format as expected by API
+    const descriptionObj = description.trim()
+      ? { description1: description.trim() }
+      : null;
+    onUpdateModule(moduleIndex, {
+      course_note: {
+        ...module.course_note,
+        description: descriptionObj,
+      },
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -718,7 +789,11 @@ function CurriculumStep({
                           description: video.description,
                           video_file: video.video_file,
                         })),
-                        course_note: module.course_note,
+                        course_note: module.course_note || {
+                          title: "",
+                          description: null,
+                          note_file: null,
+                        },
                       };
                       setFormData((prev: any) => ({
                         ...prev,
@@ -741,23 +816,53 @@ function CurriculumStep({
           (module: CourseCurriculum, moduleIndex: number) => (
             <Card key={moduleIndex}>
               <CardHeader>
-                <div className="flex items-center space-x-4">
+                <div className="space-y-4">
                   <Input
-                    placeholder="Module title"
-                    value={module.title}
+                    placeholder="Module title *"
+                    value={module.title || ""}
                     onChange={(e) =>
-                      onUpdateModule(moduleIndex, { title: e.target.value })
+                      updateModuleTitle(moduleIndex, e.target.value)
                     }
                     className="flex-1"
                   />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onAddVideo(moduleIndex)}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Video
-                  </Button>
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="Course note title *"
+                      value={module.course_note?.title || ""}
+                      onChange={(e) =>
+                        updateCourseNoteTitle(moduleIndex, e.target.value)
+                      }
+                      className="flex-1"
+                    />
+                    <Textarea
+                      placeholder="Course note description *"
+                      value={
+                        module.course_note?.description?.description1 || ""
+                      }
+                      onChange={(e) =>
+                        updateCourseNoteDescription(moduleIndex, e.target.value)
+                      }
+                      rows={2}
+                    />
+                  </div>
+                  <div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onAddVideo(moduleIndex)}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Video
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="ml-2"
+                      onClick={() => onRemoveModule()}
+                    >
+                      Remove Module
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -769,7 +874,7 @@ function CurriculumStep({
                         className="grid grid-cols-3 gap-4 p-4 border rounded-lg"
                       >
                         <Input
-                          placeholder="Video title"
+                          placeholder="Video title *"
                           value={video.title}
                           onChange={(e) => {
                             const updatedVideos = [...module.video];
@@ -893,14 +998,15 @@ function CourseDetailsStep({
   };
 
   const updateTargetAudience = (index: number, value: string) => {
-    const updated = targetAudience.map((item, i) =>
-      i === index ? value : item
-    );
+    const updated = [...targetAudience];
+    updated[index] = value;
     setTargetAudience(updated);
   };
 
   const removeTargetAudience = (index: number) => {
-    setTargetAudience(targetAudience.filter((_, i) => i !== index));
+    if (targetAudience.length > 1) {
+      setTargetAudience(targetAudience.filter((_, i) => i !== index));
+    }
   };
 
   const addLearningOutcome = () => {
@@ -908,14 +1014,15 @@ function CourseDetailsStep({
   };
 
   const updateLearningOutcome = (index: number, value: string) => {
-    const updated = learningOutcomes.map((item, i) =>
-      i === index ? value : item
-    );
+    const updated = [...learningOutcomes];
+    updated[index] = value;
     setLearningOutcomes(updated);
   };
 
   const removeLearningOutcome = (index: number) => {
-    setLearningOutcomes(learningOutcomes.filter((_, i) => i !== index));
+    if (learningOutcomes.length > 1) {
+      setLearningOutcomes(learningOutcomes.filter((_, i) => i !== index));
+    }
   };
 
   const addRequiredMaterial = () => {
@@ -923,14 +1030,15 @@ function CourseDetailsStep({
   };
 
   const updateRequiredMaterial = (index: number, value: string) => {
-    const updated = requiredMaterials.map((item, i) =>
-      i === index ? value : item
-    );
+    const updated = [...requiredMaterials];
+    updated[index] = value;
     setRequiredMaterials(updated);
   };
 
   const removeRequiredMaterial = (index: number) => {
-    setRequiredMaterials(requiredMaterials.filter((_, i) => i !== index));
+    if (requiredMaterials.length > 1) {
+      setRequiredMaterials(requiredMaterials.filter((_, i) => i !== index));
+    }
   };
 
   return (
@@ -938,25 +1046,45 @@ function CourseDetailsStep({
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Target Audience</h3>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addTargetAudience}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Audience
-          </Button>
+          <div className="flex gap-2">
+            <Badge variant="outline">At least 4*</Badge>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addTargetAudience}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Audience
+            </Button>
+          </div>
         </div>
         <div className="space-y-3">
           {targetAudience.map((audience: string, index: number) => (
             <div key={index} className="flex items-center gap-2">
               <Input
-                placeholder={`Target audience ${index + 1}`}
+                placeholder={`Target audience ${index + 1}${
+                  index === 0 || index === 1 || index === 2 || index === 3
+                    ? " (required)"
+                    : ""
+                }`}
                 value={audience}
                 onChange={(e) => updateTargetAudience(index, e.target.value)}
                 className="flex-1"
               />
+              {/* {index < 4 && (
+                <Badge
+                  variant={index < 4 ? "default" : "secondary"}
+                  className="text-xs"
+                >
+                  API #{index + 1}
+                </Badge>
+              )}
+              {index >= 4 && (
+                <Badge variant="secondary" className="text-xs">
+                  UI Only
+                </Badge>
+              )} */}
               {targetAudience.length > 1 && (
                 <Button
                   type="button"
@@ -976,26 +1104,43 @@ function CourseDetailsStep({
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Learning Outcomes</h3>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addLearningOutcome}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Outcome
-          </Button>
+          <div className="flex gap-2">
+            <Badge variant="outline">At least 4*</Badge>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addLearningOutcome}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Outcome
+            </Button>
+          </div>
         </div>
         <div className="space-y-3">
           {learningOutcomes.map((outcome: string, index: number) => (
             <div key={index} className="flex items-center gap-2">
               <Textarea
-                placeholder={`Learning outcome ${index + 1}`}
+                placeholder={`Learning outcome ${index + 1}${
+                  index === 0 || index === 1 || index === 2 || index === 3
+                    ? " (required)"
+                    : ""
+                }`}
                 value={outcome}
                 onChange={(e) => updateLearningOutcome(index, e.target.value)}
                 rows={2}
                 className="flex-1"
               />
+              {/* {index < 4 && (
+                <Badge variant="default" className="text-xs">
+                  API #{index + 1}
+                </Badge>
+              )}
+              {index >= 4 && (
+                <Badge variant="secondary" className="text-xs">
+                  UI Only
+                </Badge>
+              )} */}
               {learningOutcomes.length > 1 && (
                 <Button
                   type="button"
@@ -1015,25 +1160,42 @@ function CourseDetailsStep({
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Required Materials</h3>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addRequiredMaterial}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Material
-          </Button>
+          <div className="flex gap-2">
+            <Badge variant="outline">At least 4*</Badge>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addRequiredMaterial}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Material
+            </Button>
+          </div>
         </div>
         <div className="space-y-3">
           {requiredMaterials.map((material: string, index: number) => (
             <div key={index} className="flex items-center gap-2">
               <Input
-                placeholder={`Required material ${index + 1}`}
+                placeholder={`Required material ${index + 1}${
+                  index === 0 || index === 1 || index === 2 || index === 3
+                    ? " (required)"
+                    : ""
+                }`}
                 value={material}
                 onChange={(e) => updateRequiredMaterial(index, e.target.value)}
                 className="flex-1"
               />
+              {/* {index < 4 && (
+                <Badge variant="default" className="text-xs">
+                  API #{index + 1}
+                </Badge>
+              )}
+              {index >= 4 && (
+                <Badge variant="secondary" className="text-xs">
+                  UI Only
+                </Badge>
+              )} */}
               {requiredMaterials.length > 1 && (
                 <Button
                   type="button"
@@ -1049,6 +1211,15 @@ function CourseDetailsStep({
           ))}
         </div>
       </div>
+
+      {/* <Alert>
+        <AlertDescription>
+          <strong>Current Limitation:</strong> The API currently accepts only
+          the first 4 items from each section. Additional items are for UI
+          purposes only and won't be saved. Consider asking your backend team to
+          make the API more flexible.
+        </AlertDescription>
+      </Alert> */}
     </div>
   );
 }
@@ -1160,17 +1331,16 @@ function ReviewStep({
             <div className="space-y-4">
               <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  {/* <Pounds className="h-5 w-5 text-green-600" /> */}£
                   <span className="font-semibold">Pricing</span>
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="text-2xl font-bold text-green-600">
-                      £{formData.price}
+                      ${formData.price}
                     </span>
                     {formData.original_price > formData.price && (
                       <span className="text-lg text-gray-500 line-through">
-                        £{formData.original_price}
+                        ${formData.original_price}
                       </span>
                     )}
                   </div>
@@ -1234,7 +1404,8 @@ function ReviewStep({
 
                 {curriculumModule.course_note?.description && (
                   <p className="text-sm text-muted-foreground bg-gray-50 dark:bg-gray-900 p-3 rounded">
-                    {curriculumModule.course_note.description}
+                    {curriculumModule.course_note.description?.description1 ||
+                      ""}
                   </p>
                 )}
 

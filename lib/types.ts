@@ -87,7 +87,7 @@ export interface CourseVideo {
 export interface CourseNote {
   id?: string;
   title: string;
-  description: string | null;
+  description: Record<string, string> | null;
   note_file: string | null;
 }
 

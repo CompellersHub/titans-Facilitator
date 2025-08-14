@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryProvider } from "@/components/query-provider";
+import { ChatbotButton } from "@/components/ChatbotButton";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,11 +25,11 @@ export default function RootLayout({
           <ThemeProvider
             attribute="class"
             defaultTheme="light"
-            forcedTheme="light"
             enableSystem
             disableTransitionOnChange
           >
             {children}
+            <ChatbotButton />
           </ThemeProvider>
         </QueryProvider>
       </body>
