@@ -18,18 +18,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Eye,
-  EyeOff,
-  ArrowLeft,
-  Sparkles,
-  Users,
-  Trophy,
-  Loader2,
-} from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, Sparkles, Loader2 } from "lucide-react";
 import { CourseAutocomplete } from "./ui/course-autocomplete";
-import { ModeToggle } from "@/components/mode-toggle";
-import { useTheme } from "next-themes";
 
 interface SignUpData {
   email: string;

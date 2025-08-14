@@ -3,17 +3,9 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
-  BookOpen,
-  Users,
-  Calendar,
-  BarChart3,
   ArrowRight,
-  PlayCircle,
   CheckCircle,
-  Clock,
   Award,
-  Video,
-  FileText,
   Building2,
   Smartphone,
   Car,

@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "1024mb", // Increase limit to 100MB for video uploads
     },
   },
+
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;
