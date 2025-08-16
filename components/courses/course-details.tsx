@@ -37,7 +37,7 @@ interface CourseDetailsProps {
 }
 
 export function CourseDetails({ courseId }: CourseDetailsProps) {
-  const router = useRouter();
+  // const router = useRouter();
   const { data: course, isLoading, error } = useCourse(courseId);
   const { mutate: deleteCourse, isPending: isDeleting } = useDeleteCourse();
 
