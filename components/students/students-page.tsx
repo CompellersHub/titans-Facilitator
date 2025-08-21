@@ -1,6 +1,8 @@
 "use client";
 
+
 import { useState } from "react";
+import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import {
   Search,
   Filter,
@@ -8,7 +10,6 @@ import {
   BookOpen,
   Phone,
   Mail,
-  UserPlus,
   GraduationCap,
   Eye,
   Edit,
@@ -52,22 +53,31 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useStudents } from "@/hooks/use-students";
 import { useCourses } from "@/hooks/use-courses";
+import { useSendMail } from "@/hooks/use-send-mail";
 import { format } from "date-fns";
 import Link from "next/link";
 import type { Student } from "@/lib/types";
+import { Checkbox } from "../ui/checkbox";
 
 const ITEMS_PER_PAGE = 10;
 
 export function StudentsPage() {
+  const [teacherName, setTeacherName] = useState("");
+  const [teacherEmail, setTeacherEmail] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [mailSheetOpen, setMailSheetOpen] = useState(false);
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [mailSubject, setMailSubject] = useState("");
+  const [mailBody, setMailBody] = useState("");
   const [selectedCourse, setSelectedCourse] = useState<string>("all");
   const [enrollmentFilter, setEnrollmentFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortField, setSortField] = useState<keyof Student>("first_name");
+  const [sortField, setSortField] = useState<keyof Student>("last_name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const { data: students, isLoading, error } = useStudents();
   const { data: courses } = useCourses();
+  const { mutate: sendMail } = useSendMail();
 
   const filteredStudents = students?.filter((student) => {
     const matchesSearch =
@@ -158,11 +168,176 @@ export function StudentsPage() {
             Manage and track your student enrollments
           </p>
         </div>
-        <Button className="">
-          <UserPlus className="mr-2 h-4 w-4" />
-          Add Student
-        </Button>
-      </div>
+        <Dialog open={mailSheetOpen} onOpenChange={setMailSheetOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Mail className="mr-2 h-4 w-4" />
+              Send Mail
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <div className="flex flex-col h-full">
+              <div className="border-b border-border px-8 py-6  rounded-t-lg shadow-sm">
+                <DialogTitle className="text-2xl font-bold tracking-tight flex items-center gap-2">
+                  <Mail className="h-6 w-6 text-blue-600" />
+                  Send Mail to Students
+                </DialogTitle>
+                <DialogDescription className="mt-1">Select recipients and compose your message below.</DialogDescription>
+                <DialogClose asChild>
+                  <button className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors text-xl" aria-label="Close">×</button>
+                </DialogClose>
+              </div>
+              <div className="flex-1 overflow-y-auto px-8 py-6 space-y-0 bg-background">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Left column: Teacher info, subject, message */}
+                  <div className="flex flex-col gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold mb-1" htmlFor="teacher-name">Your Name</label>
+                      <Input
+                        id="teacher-name"
+                        placeholder="Enter your name"
+                        value={teacherName}
+                        onChange={(e) => setTeacherName(e.target.value)}
+                        className="bg-white dark:bg-input/40 border border-input focus:border-blue-500 focus:ring-2 focus:ring-blue-200 mb-3"
+                      />
+                      <label className="block text-sm font-semibold mb-1" htmlFor="teacher-email">Your Email</label>
+                      <Input
+                        id="teacher-email"
+                        placeholder="Enter your email"
+                        value={teacherEmail}
+                        onChange={(e) => setTeacherEmail(e.target.value)}
+                        className="bg-white dark:bg-input/40 border border-input focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1" htmlFor="mail-subject">Subject</label>
+                      <Input
+                        id="mail-subject"
+                        placeholder="Subject"
+                        value={mailSubject}
+                        onChange={(e) => setMailSubject(e.target.value)}
+                        className="bg-white dark:bg-input/40 border border-input focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      />
+                    </div>
+                    <div className="flex-1 flex flex-col">
+                      <label className="block text-sm font-semibold mb-1" htmlFor="mail-body">Message</label>
+                      <textarea
+                        id="mail-body"
+                        className="w-full min-h-[200px] md:min-h-[260px] border rounded-lg p-4 bg-white dark:bg-input/40 border-input focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-base resize-vertical shadow-sm flex-1"
+                        placeholder="Write your message to selected students..."
+                        value={mailBody}
+                        onChange={(e) => setMailBody(e.target.value)}
+                        style={{ fontSize: '1.1rem', lineHeight: '1.6' }}
+                      />
+                    </div>
+                  </div>
+                  {/* Right column: Recipients */}
+                  <div className="flex flex-col h-full">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold text-base">Recipients</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs px-2 py-1"
+                        onClick={() => setSelectedStudents(students?.map(s => s.id) || [])}
+                        disabled={students?.length === 0}
+                      >
+                        Select All
+                      </Button>
+                    </div>
+                    <div className="grid gap-2 max-h-[420px] overflow-y-auto border rounded-lg p-3  flex-1">
+                      {students?.map((student) => (
+                        <label key={student.id} className="flex flex-col md:flex-row md:items-center gap-2 cursor-pointer hover:bg-primary/10 rounded px-2 py-2 transition-colors">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Checkbox
+                              checked={selectedStudents.includes(student.id)}
+                              onCheckedChange={(checked: boolean) => {
+                                setSelectedStudents((prev) =>
+                                  checked
+                                    ? [...prev, student.id]
+                                    : prev.filter((id) => id !== student.id)
+                                );
+                              }}
+                            />
+                            <span className="text-sm font-medium truncate">
+                              <span className="font-semibold text-blue-700 dark:text-blue-300">{student.first_name} {student.last_name}</span>
+                              <span className="text-xs text-muted-foreground ml-2">{student.email}</span>
+                            </span>
+                          </div>
+                          {student.course.length > 0 && (
+                            <div className="flex flex-wrap gap-1 ml-7 md:ml-0">
+                              {student.course.map((course, idx) => {
+                                // Color flow: blue, green, orange, purple, repeat
+                                const badgeColors = [
+                                  'bg-blue-100 text-blue-700 border-blue-300',
+                                  'bg-green-100 text-green-700 border-green-300',
+                                  'bg-orange-100 text-orange-700 border-orange-300',
+                                  'bg-purple-100 text-purple-700 border-purple-300',
+                                ];
+                                const color = badgeColors[idx % badgeColors.length];
+                                return (
+                                  <span
+                                    key={course.id}
+                                    className={`px-2 py-0.5 rounded border text-xs font-semibold ${color}`}
+                                  >
+                                    {course.name.length > 18 ? `${course.name.slice(0, 18)}...` : course.name}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="border-t border-border px-8 py-6 bg-gradient-to-r from-blue-50/60 via-white/60 to-emerald-50/60 dark:from-gray-900/40 dark:to-gray-800/40 rounded-b-lg flex items-center gap-3">
+                <Button
+                  className="w-full text-base font-semibold py-3"
+                  disabled={
+                    selectedStudents.length === 0 ||
+                    !mailSubject ||
+                    !mailBody ||
+                    !teacherName ||
+                    !teacherEmail
+                  }
+                  onClick={() => {
+                    const studentEmails = selectedStudents
+                      .map(id => students?.find(s => s.id === id)?.email)
+                      .filter((email): email is string => Boolean(email));
+                    sendMail(
+                      {
+                        student_email: studentEmails,
+                        subject: mailSubject,
+                        message: mailBody,
+                        teacher_name: teacherName,
+                        teacher_email: teacherEmail,
+                      },
+                      {
+                        onSuccess: () => {
+                          setMailSheetOpen(false);
+                          setSelectedStudents([]);
+                          setMailSubject("");
+                          setMailBody("");
+                          setTeacherName("");
+                          setTeacherEmail("");
+                        },
+                        onError: () => {
+                          alert("Failed to send mail. Please try again.");
+                        },
+                      }
+                    );
+                  }}
+                >
+                  Send Mail
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+  </Dialog>
+  {/* ...existing code... */}
+</div>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">

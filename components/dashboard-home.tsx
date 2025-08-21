@@ -84,8 +84,8 @@ export function DashboardHome() {
           </AlertDescription>
         </Alert>
       )}
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 bg-blue-100 dark:bg-black p-2">
+      {/* Removed empty grid that caused parsing error */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 bg-blue-100 dark:bg-black p-2">
         <StatsCard
           title="Total Courses"
           value={courses?.length}
@@ -227,7 +227,7 @@ export function DashboardHome() {
                     <span className="text-sm font-medium">New Assignment</span>
                   </Button>
                 </Link>
-                <Link href="/courses/library/create">
+                <Link href="/library/create">
                   <Button
                     variant="outline"
                     className="w-full h-auto p-4 flex flex-col items-center space-y-2 bg-transparent"
@@ -327,39 +327,99 @@ function ToolItem({
   );
 }
 
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useRouter } from "next/navigation";
+
+const statCardConfig = {
+  "Total Courses": {
+    accent: "from-blue-500 to-purple-500",
+    tooltip: "All courses you facilitate.",
+    link: "/courses",
+    trend: 0,
+  },
+  "Total Students": {
+    accent: "from-green-500 to-emerald-500",
+    tooltip: "All students enrolled in your courses.",
+    link: "/students",
+    trend: 0,
+  },
+  "Pending Assignments": {
+    accent: "from-yellow-500 to-orange-500",
+    tooltip: "Assignments awaiting grading or submission.",
+    link: "/assignments",
+    trend: 0,
+  },
+  "Unread Messages": {
+    accent: "from-pink-500 to-red-500",
+    tooltip: "Messages you haven't read yet.",
+    link: "/messages",
+    trend: 0,
+  },
+  "Upcoming Classes": {
+    accent: "from-cyan-500 to-blue-400",
+    tooltip: "Classes scheduled in the future.",
+    link: "/schedule",
+    trend: 0,
+  },
+  "Live Classes": {
+    accent: "from-indigo-500 to-blue-700",
+    tooltip: "Classes currently live.",
+    link: "/schedule",
+    trend: 0,
+  },
+  "Library Items": {
+    accent: "from-emerald-500 to-teal-400",
+    tooltip: "Resources in your course library.",
+    link: "/courses/library",
+    trend: 0,
+  },
+};
+
+type StatCardTitle = keyof typeof statCardConfig;
+
 function StatsCard({
   title,
   value,
   icon: Icon,
   loading,
 }: {
-  title: string;
+  title: StatCardTitle;
   value?: number;
   icon: React.ElementType;
   loading: boolean;
 }) {
+  const router = useRouter();
+  const config = statCardConfig[title];
   return (
-    <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800/50 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+    <Card
+      onClick={() => config.link && router.push(config.link)}
+      className={`group relative overflow-hidden border-0 bg-gradient-to-br ${config.accent || "from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800/50"} shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer`}
+    >
       <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-white/20 dark:to-gray-700/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 pt-6">
-        <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400 tracking-wide">
+        <CardTitle className="text-sm font-medium text-white tracking-wide">
           {title}
         </CardTitle>
-        <div className="p-2 rounded-lg bg-gray-100/80 dark:bg-gray-800/80 group-hover:bg-gray-200/80 dark:group-hover:bg-gray-700/80 transition-colors duration-200">
-          <Icon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-        </div>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="p-2 rounded-lg bg-white/20 group-hover:bg-white/40 transition-colors duration-200">
+                <Icon className="h-5 w-5 text-white" />
+              </div>
+            </TooltipTrigger>
+            {config.tooltip && <TooltipContent>{config.tooltip}</TooltipContent>}
+          </Tooltip>
+        </TooltipProvider>
       </CardHeader>
-
       <CardContent className="pb-6">
         {loading ? (
           <Skeleton className="h-10 w-20" />
         ) : (
           <div className="space-y-1">
-            <div className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+            <div className="text-3xl font-bold text-white tracking-tight">
               {value?.toLocaleString() ?? 0}
             </div>
-            <div className="h-1 w-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="h-1 w-8 bg-white/40 rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
           </div>
         )}
       </CardContent>
@@ -374,8 +434,8 @@ function DashboardHomeSkeleton() {
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-4 w-96 mt-2" />
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        {Array.from({ length: 5 }).map((_, i) => (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
           <Card key={i}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <Skeleton className="h-4 w-24" />

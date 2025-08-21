@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 import {
   Edit,
   Trash2,
@@ -29,6 +30,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useCourse, useDeleteCourse } from "@/hooks/use-courses";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -37,24 +39,18 @@ interface CourseDetailsProps {
 }
 
 export function CourseDetails({ courseId }: CourseDetailsProps) {
-  // const router = useRouter();
+  const router = useRouter();
   const { data: course, isLoading, error } = useCourse(courseId);
   const { mutate: deleteCourse, isPending: isDeleting } = useDeleteCourse();
 
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
   const handleDelete = () => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this course? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
-
     deleteCourse(courseId, {
       onSuccess: () => {
         window.location.href = "/courses";
       },
       onError: (error) => {
+        setDeleteOpen(false);
         console.error("Failed to delete course:", error);
         alert("Failed to delete course. Please try again.");
       },
@@ -101,19 +97,33 @@ export function CourseDetails({ courseId }: CourseDetailsProps) {
           <p className="text-muted-foreground">Course Management</p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline">
+          <Button
+            variant="outline"
+            onClick={() => router.push(`/courses/${courseId}/edit`)}
+          >
             <Edit className="mr-2 h-4 w-4" />
             Edit Course
           </Button>
-          <Button
-            variant="outline"
-            className="text-destructive bg-transparent"
-            onClick={handleDelete}
-            disabled={isDeleting}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            {isDeleting ? "Deleting..." : "Delete"}
-          </Button>
+          <ConfirmDialog
+            open={deleteOpen}
+            onOpenChange={setDeleteOpen}
+            title="Delete Course"
+            description="Are you sure you want to delete this course? This action cannot be undone."
+            confirmText="Delete"
+            cancelText="Cancel"
+            loading={isDeleting}
+            onConfirm={handleDelete}
+            trigger={
+              <Button
+                variant="outline"
+                className="text-destructive bg-transparent"
+                disabled={isDeleting}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                {isDeleting ? "Deleting..." : "Delete"}
+              </Button>
+            }
+          />
         </div>
       </div>
 

@@ -44,7 +44,14 @@ import type {
   CreateCourseData,
 } from "@/lib/types";
 
-export function CreateCourseForm() {
+interface CreateCourseFormProps {
+  courseId?: string;
+}
+
+import { useEffect } from "react";
+import { useCourse } from "@/hooks/use-courses";
+
+export function CreateCourseForm({ courseId }: CreateCourseFormProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<Partial<CreateCourseData>>({
     name: "",
@@ -56,6 +63,19 @@ export function CreateCourseForm() {
     level: "beginner",
     curriculum: [],
   });
+
+  // Load course data if editing
+  const { data: course } = useCourse(courseId!);
+  useEffect(() => {
+    if (courseId && course) {
+      setFormData({
+        ...course,
+        category: course.category ? { id: course.category.id, name: course.category.name } : undefined,
+        curriculum: course.curriculum || [],
+      });
+      // Optionally set other state like targetAudience, learningOutcomes, requiredMaterials if present in course
+    }
+  }, [courseId, course]);
 
   // Separate state for dynamic arrays - exactly 4 items each as required by API
   const [targetAudience, setTargetAudience] = useState<string[]>([""]);
@@ -718,13 +738,13 @@ function CurriculumStep({
 }: any) {
   const updateModuleTitle = (moduleIndex: number, title: string) => {
     onUpdateModule(moduleIndex, { title });
-  };
+  }
 
   const updateCourseNoteTitle = (moduleIndex: number, title: string) => {
-    const module = formData.curriculum[moduleIndex];
+    const mod = formData.curriculum[moduleIndex];
     onUpdateModule(moduleIndex, {
       course_note: {
-        ...module.course_note,
+        ...mod.course_note,
         title,
       },
     });
@@ -734,14 +754,14 @@ function CurriculumStep({
     moduleIndex: number,
     description: string
   ) => {
-    const module = formData.curriculum[moduleIndex];
+    const mod = formData.curriculum[moduleIndex];
     // Convert string to dictionary format as expected by API
     const descriptionObj = description.trim()
       ? { description1: description.trim() }
       : null;
     onUpdateModule(moduleIndex, {
       course_note: {
-        ...module.course_note,
+        ...mod.course_note,
         description: descriptionObj,
       },
     });

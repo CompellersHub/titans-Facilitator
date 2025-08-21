@@ -48,48 +48,23 @@ export function LandingPage() {
       <nav className="border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-3 dark:bg-slate-300">
+            <div className="flex items-center space-x-3 dark:bg-slate-300 rounded-sm">
               <Image
                 src="https://titanscareers.com/assets/logo-DMzVeG9H.png"
                 alt="Titans Career"
                 width={100}
                 height={50}
-                className="rounded-lg"
+                className="rounded-full "
               />
             </div>
 
-            <div className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-600">
-              <a
-                href="#features"
-                className="hover:text-slate-900 transition-colors"
-              >
-                Features
-              </a>
-              <a
-                href="#pricing"
-                className="hover:text-slate-900 transition-colors"
-              >
-                Pricing
-              </a>
-              <a
-                href="#about"
-                className="hover:text-slate-900 transition-colors"
-              >
-                About
-              </a>
-              <a
-                href="#resources"
-                className="hover:text-slate-900 transition-colors"
-              >
-                Resources
-              </a>
-            </div>
+         
 
             <div className="flex items-center space-x-3">
               <Button
                 variant="ghost"
                 onClick={() => router.push("/login")}
-                className="text-slate-600 hover:text-slate-900"
+                className="dark:text-white text-slate-600 hover:text-slate-900"
               >
                 Sign In
               </Button>
@@ -119,7 +94,7 @@ export function LandingPage() {
             </div>
 
             <div className="space-y-6">
-              <h1 className="text-5xl lg:text-6xl font-bold text-slate-900 leading-tight dark:text-white">
+              <h1 className="text-5xl lg:text-6xl font-bold text-slate-500 leading-tight dark:text-white">
                 Super minimal
                 <br />
                 way to start your
@@ -127,7 +102,7 @@ export function LandingPage() {
                 <span className="text-primary">online courses!</span>
               </h1>
 
-              <p className="text-xl text-slate-600 leading-relaxed max-w-lg">
+              <p className="text-xl text-slate-900 dark:text-slate-200 leading-relaxed max-w-lg">
                 A comprehensive platform for facilitators to create courses,
                 manage students, schedule live classes, and track progress—all
                 in one place.
@@ -145,7 +120,7 @@ export function LandingPage() {
 
               <button
                 onClick={() => router.push("/login")}
-                className="text-slate-600 hover:text-slate-900 text-sm font-medium flex items-center space-x-2 mt-3"
+                className="dark:text-white text-slate-600 hover:text-slate-900 text-sm font-medium flex items-center space-x-2 mt-3"
               >
                 <span>Sign in </span>
                 <ArrowRight className="w-4 h-4" />
@@ -158,15 +133,19 @@ export function LandingPage() {
             </div>
           </div>
 
-          {/* Right Demo */}
-          <div>
+        {/* Right Demo */}
+        <div className="flex items-start h-full">
+          <div className="flex items-start justify-center w-full xl:w-[900px] 2xl:w-[1200px] min-h-[520px] lg:min-h-[650px] pt-30">
             <Image
               src="/images/hero1.png"
               alt="Hero Image"
-              width={700}
-              height={500}
+              width={1200}
+              height={1200}
+              className="object-contain w-full h-full max-h-full rounded-2xl shadow-lg bg-white dark:bg-slate-900 self-start"
+              priority
             />
           </div>
+        </div>
         </div>
       </section>
 

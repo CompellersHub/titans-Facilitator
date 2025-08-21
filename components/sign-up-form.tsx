@@ -95,7 +95,7 @@ export function SignUpForm() {
   return (
     <div className="w-full max-w-3xl mx-auto space-y-6 flex flex-col justify-center items-center">
       <nav className="flex items-center justify-between w-full">
-        <div className="p-2 dark:bg-slate-300">
+        <div className="p-2 dark:bg-slate-300 rounded-2xl">
           <Image
             src="https://titanscareers.com/assets/logo-DMzVeG9H.png"
             alt="Titans Career"
@@ -149,7 +149,7 @@ export function SignUpForm() {
       {/* Form Card */}
       <Card className="border-0 shadow-sm max-w-2xl bg-blue-50 dark:bg-slate-900">
         <CardHeader className="text-center space-y-1 pb-4">
-          <CardTitle className="text-xl">Create Your Account</CardTitle>
+          <CardTitle className="text-2xl">Create Your Account</CardTitle>
           <CardDescription>
             Join our community of career education facilitators
           </CardDescription>
