@@ -81,12 +81,12 @@ export function DashboardSidebar({
             <Image
               alt="Titans Career Logo"
               src="https://titanscareers.com/assets/logo-DMzVeG9H.png"
-              width={100}
-              height={100}
+              width={400}
+              height={400}
             />
           </div>
           {(open || isMobile) && (
-            <span className="font-semibold text-black">TITANS CAREER</span>
+            <span className="font-semibold text-gray-900 dark:text-white">TITANS CAREER</span>
           )}
         </div>
         {!isMobile && (

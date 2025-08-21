@@ -1,6 +1,8 @@
 "use client";
 
-import type React from "react";
+import React from "react";
+
+import { useAssignment, useUpdateAssignment } from "@/hooks/use-assignments";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -35,7 +37,23 @@ import { useCourses } from "@/hooks/use-courses";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
-export function CreateAssignmentForm() {
+export function CreateAssignmentForm({ assignmentId }: { assignmentId?: string } = {}) {
+  // If editing, fetch assignment data
+  // Always call hooks at the top level
+  const assignmentHook = useAssignment(assignmentId || "");
+  const assignmentData = assignmentId ? assignmentHook.data : undefined;
+  const updateAssignment = useUpdateAssignment();
+
+  // Prefill state if editing
+  React.useEffect(() => {
+    if (assignmentData) {
+      setTitle(assignmentData.title || "");
+      setDescription(assignmentData.description || "");
+      setSelectedCourse(assignmentData.course_id || "");
+      setDueDate(assignmentData.due_date ? new Date(assignmentData.due_date) : undefined);
+      setTotalMarks(assignmentData.total_marks ? assignmentData.total_marks.toString() : "");
+    }
+  }, [assignmentData]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("");
@@ -61,11 +79,29 @@ export function CreateAssignmentForm() {
       teacher: courses ? courses[0].instructor : undefined,
     };
 
-    createAssignment(assignmentData, {
-      onSuccess: () => {
-        router.push("/assignments");
-      },
-    });
+    if (assignmentId) {
+      // Update
+      updateAssignment.mutate(
+        { assignmentId, data: assignmentData },
+        {
+          onSuccess: () => {
+            router.push(`/assignments/${assignmentId}`);
+          },
+        }
+      );
+    } else {
+      // Create
+      createAssignment(assignmentData, {
+        onSuccess: (data: { id?: string }) => {
+          // If API returns the new assignment's id, redirect to its details page
+          if (data && data.id) {
+            router.push(`/assignments/${data.id}`);
+          } else {
+            router.push("/assignments");
+          }
+        },
+      });
+    }
   };
 
   const isFormValid = title && description && selectedCourse && dueDate;
@@ -73,9 +109,11 @@ export function CreateAssignmentForm() {
   return (
     <Card className="max-w-2xl mx-auto shadow-none ">
       <CardHeader>
-        <CardTitle>Assignment Details</CardTitle>
+        <CardTitle>{assignmentId ? "Edit Assignment" : "Assignment Details"}</CardTitle>
         <CardDescription>
-          Fill in the information below to create a new assignment
+          {assignmentId
+            ? "Update the information below to edit the assignment."
+            : "Fill in the information below to create a new assignment"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -196,11 +234,9 @@ export function CreateAssignmentForm() {
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  {assignmentId ? "Updating..." : "Creating..."}
                 </>
-              ) : (
-                "Create Assignment"
-              )}
+              ) : assignmentId ? "Update Assignment" : "Create Assignment"}
             </Button>
             <Button
               type="button"

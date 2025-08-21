@@ -5,11 +5,11 @@ import {
   FileText,
   User,
   Edit,
-  Trash2,
   Download,
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DeleteAssignmentButton } from "./DeleteAssignmentButton";
 import {
   Card,
   CardContent,
@@ -26,6 +26,7 @@ import {
   useAssignmentSubmissions,
 } from "@/hooks/use-assignments";
 import { format } from "date-fns";
+import { useRouter } from "next/navigation";
 
 interface AssignmentDetailsProps {
   assignmentId: string;
@@ -33,9 +34,10 @@ interface AssignmentDetailsProps {
 
 export function AssignmentDetails({ assignmentId }: AssignmentDetailsProps) {
   const { data: assignment, isLoading, error } = useAssignment(assignmentId);
-  const { data: submissions, isLoading: submissionsLoading } =
-    useAssignmentSubmissions(assignmentId);
+  const { data: submissions, isLoading: submissionsLoading } = useAssignmentSubmissions(assignmentId);
+  const router = useRouter();
 
+  console.log(submissions);
   console.log(submissions);
 
   if (error) {
@@ -73,17 +75,17 @@ export function AssignmentDetails({ assignmentId }: AssignmentDetailsProps) {
           <p className="text-muted-foreground">Assignment Details</p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline" className="shadow-none">
+          <Button
+            variant="outline"
+            className="shadow-none flex-1"
+            onClick={() => {
+              router.push(`/assignments/${assignmentId}/edit`);
+            }}
+          >
             <Edit className="mr-2 h-4 w-4 " />
             Edit
           </Button>
-          <Button
-            variant="outline"
-            className="text-destructive bg-transparent shadow-none"
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-          </Button>
+          <DeleteAssignmentButton assignmentId={assignmentId} buttonClassName="flex-1" />
         </div>
       </div>
 
