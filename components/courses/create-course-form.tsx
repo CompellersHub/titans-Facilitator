@@ -390,6 +390,14 @@ export function CreateCourseForm({ courseId }: CreateCourseFormProps) {
 
   return (
     <div className="max-w-4xl mx-auto">
+      {/* Custom Back Arrow Button - Blue in all modes */}
+      <div
+        className="flex gap-1 bg-blue-100 dark:bg-blue-900 p-1 w-fit rounded-md text-sm mb-2 cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+        onClick={() => router.back()}
+        title="Go Back"
+      >
+        <ArrowLeft className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+      </div>
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           {steps.map((step, index) => (
@@ -488,7 +496,7 @@ export function CreateCourseForm({ courseId }: CreateCourseFormProps) {
           onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
           disabled={currentStep === 0}
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="mr-2 h-4 w-4 text-blue-600 dark:text-blue-400" />
           Previous
         </Button>
 

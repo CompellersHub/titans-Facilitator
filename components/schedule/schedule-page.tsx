@@ -45,19 +45,23 @@ export function SchedulePage() {
     return "completed";
   };
 
-  const filteredClasses = liveClasses?.filter((liveClass) => {
-    const matchesSearch = liveClass.course.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const status = getClassStatus(liveClass);
-    const matchesFilter = filterStatus === "all" || status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
+  const filteredClasses = Array.isArray(liveClasses)
+    ? liveClasses.filter((liveClass) => {
+        const matchesSearch = liveClass.course.name
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
+        const status = getClassStatus(liveClass);
+        const matchesFilter = filterStatus === "all" || status === filterStatus;
+        return matchesSearch && matchesFilter;
+      })
+    : [];
 
-  const upcomingClasses =
-    liveClasses?.filter((c) => getClassStatus(c) === "upcoming") || [];
-  const liveNow =
-    liveClasses?.filter((c) => getClassStatus(c) === "live") || [];
+  const upcomingClasses = Array.isArray(liveClasses)
+    ? liveClasses.filter((c) => getClassStatus(c) === "upcoming")
+    : [];
+  const liveNow = Array.isArray(liveClasses)
+    ? liveClasses.filter((c) => getClassStatus(c) === "live")
+    : [];
 
   if (error) {
     return (
@@ -134,7 +138,7 @@ export function SchedulePage() {
                   Total Classes
                 </p>
                 <p className="text-2xl font-bold text-purple-600">
-                  {liveClasses?.length || 0}
+                  {Array.isArray(liveClasses) ? liveClasses.length : 0}
                 </p>
               </div>
               <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center">
@@ -152,14 +156,16 @@ export function SchedulePage() {
                   This Week
                 </p>
                 <p className="text-2xl font-bold text-orange-600">
-                  {liveClasses?.filter((c) => {
-                    const classDate = new Date(c.start_time);
-                    const weekFromNow = addHours(new Date(), 168); // 7 days
-                    return (
-                      isAfter(classDate, new Date()) &&
-                      isBefore(classDate, weekFromNow)
-                    );
-                  }).length || 0}
+                  {Array.isArray(liveClasses)
+                    ? liveClasses.filter((c) => {
+                        const classDate = new Date(c.start_time);
+                        const weekFromNow = addHours(new Date(), 168); // 7 days
+                        return (
+                          isAfter(classDate, new Date()) &&
+                          isBefore(classDate, weekFromNow)
+                        );
+                      }).length
+                    : 0}
                 </p>
               </div>
               <div className="h-8 w-8 bg-orange-100 rounded-full flex items-center justify-center">

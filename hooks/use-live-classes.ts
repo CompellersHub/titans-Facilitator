@@ -33,21 +33,16 @@ export function useCreateLiveClass() {
 
   return useMutation({
     mutationFn: async (classData: CreateLiveClassData) => {
-      const formData = new FormData();
-      formData.append("course_id", classData.course_id);
-      formData.append("teacher_id", classData.teacher_id);
-      formData.append("start_time", classData.start_time);
-      formData.append("end_time", classData.end_time);
-      formData.append("link", classData.link);
-
+      // Send JSON payload instead of FormData
       const response = await fetch(
         `${apiClient["baseUrl"]}/courses/CreateLiveClass/`,
         {
           method: "POST",
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${apiClient.getAccessToken()}`,
           },
-          body: formData,
+          body: JSON.stringify(classData),
         }
       );
 
@@ -75,21 +70,16 @@ export function useUpdateLiveClass() {
       classId: string;
       data: Partial<CreateLiveClassData>;
     }) => {
-      const formData = new FormData();
-      if (data.course_id) formData.append("course_id", data.course_id);
-      if (data.teacher_id) formData.append("teacher_id", data.teacher_id);
-      if (data.start_time) formData.append("start_time", data.start_time);
-      if (data.end_time) formData.append("end_time", data.end_time);
-      if (data.link) formData.append("link", data.link);
-
+      // Send JSON payload instead of FormData
       const response = await fetch(
         `${apiClient["baseUrl"]}/courses/CreateLiveClass/${classId}/`,
         {
           method: "PATCH",
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${apiClient.getAccessToken()}`,
           },
-          body: formData,
+          body: JSON.stringify(data),
         }
       );
 

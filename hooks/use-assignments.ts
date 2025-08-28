@@ -32,17 +32,13 @@ export function useCreateAssignment() {
 
   return useMutation({
     mutationFn: async (assignmentData: CreateAssignmentData) => {
-      const formData = new FormData()
-      formData.append("course", assignmentData.course)
-      formData.append("title", assignmentData.title)
-      formData.append("description", assignmentData.description)
-      formData.append("due_date", assignmentData.due_date)
-      if (assignmentData.total_marks) {
-        formData.append("total_marks", assignmentData.total_marks.toString())
-      }
-      if (assignmentData.file) {
-        formData.append("file", assignmentData.file)
-      }
+      const formData = new FormData();
+      formData.append("course", assignmentData.course);
+      formData.append("title", assignmentData.title);
+      formData.append("description", assignmentData.description);
+      formData.append("due_date", assignmentData.due_date);
+      if (assignmentData.total_marks !== undefined) formData.append("total_marks", assignmentData.total_marks.toString());
+      if (assignmentData.file) formData.append("file", assignmentData.file);
 
       const response = await fetch(`${apiClient["baseUrl"]}/courses/assignments/`, {
         method: "POST",
@@ -50,14 +46,14 @@ export function useCreateAssignment() {
           Authorization: `Bearer ${apiClient.getAccessToken()}`,
         },
         body: formData,
-      })
+      });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.message || "Failed to create assignment")
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to create assignment");
       }
 
-      return response.json()
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ASSIGNMENT_KEYS.lists() })
@@ -70,20 +66,14 @@ export function useUpdateAssignment() {
 
   return useMutation({
     mutationFn: async ({ assignmentId, data }: { assignmentId: string; data: UpdateAssignmentData }) => {
-      const formData = new FormData();
-      if (data.title) formData.append("title", data.title);
-      if (data.description) formData.append("description", data.description);
-      if (data.due_date) formData.append("due_date", data.due_date);
-      if (data.total_marks) formData.append("total_marks", data.total_marks.toString());
-      if (data.file) formData.append("file", data.file);
-      if ((data as any).course) formData.append("course", (data as any).course);
-
+      // Send JSON payload with S3 URL
       const response = await fetch(`${apiClient["baseUrl"]}/courses/assignments/${assignmentId}/`, {
         method: "PUT",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${apiClient.getAccessToken()}`,
         },
-        body: formData,
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
