@@ -82,19 +82,19 @@ export function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-6 lg:px-8 py-20">
+      <section className="max-w-7xl mx-auto px-6 lg:px-8 py-10">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           {/* Left Content */}
           <div className="space-y-8">
             <div className="space-y-2">
-              <div className="inline-flex items-center space-x-2 bg-blue-50 text-primary/80 px-3 py-1 rounded-full text-sm font-medium dark:bg-blue-900">
+              <div className="inline-flex items-center space-x-2 bg-blue-100 text-primary/90 px-3 py-1 rounded-full text-sm font-medium dark:bg-blue-900">
                 <Award className="w-4 h-4" />
                 <span>Empowering Facilitators</span>
               </div>
             </div>
 
             <div className="space-y-6">
-              <h1 className="text-5xl lg:text-6xl font-bold text-slate-500 leading-tight dark:text-white">
+              <h1 className="text-5xl lg:text-6xl font-bold text-slate-900 leading-tight dark:text-white">
                 Super minimal
                 <br />
                 way to start your

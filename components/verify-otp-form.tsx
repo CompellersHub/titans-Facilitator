@@ -216,7 +216,7 @@ export function VerifyOTPForm() {
           href="/sign-up"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 text-blue-600 dark:text-blue-400" />
           Back to Sign Up
         </Link>
 

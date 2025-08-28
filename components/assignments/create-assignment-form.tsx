@@ -60,12 +60,13 @@ export function CreateAssignmentForm({ assignmentId }: { assignmentId?: string }
   const [dueDate, setDueDate] = useState<Date>();
   const [totalMarks, setTotalMarks] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [fileUrl, setFileUrl] = useState<string>(""); // No longer used, can be removed in future
 
   const router = useRouter();
   const { mutate: createAssignment, isPending, error } = useCreateAssignment();
   const { data: courses, isLoading: coursesLoading } = useCourses();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!dueDate) return;
 
@@ -75,12 +76,11 @@ export function CreateAssignmentForm({ assignmentId }: { assignmentId?: string }
       description,
       due_date: dueDate.toISOString(),
       total_marks: totalMarks ? Number.parseInt(totalMarks) : undefined,
-      file,
-      teacher: courses ? courses[0].instructor : undefined,
+      ...(file ? { file } : {}),
     };
 
     if (assignmentId) {
-      // Update
+      // Update (leave as is for now)
       updateAssignment.mutate(
         { assignmentId, data: assignmentData },
         {
@@ -93,7 +93,6 @@ export function CreateAssignmentForm({ assignmentId }: { assignmentId?: string }
       // Create
       createAssignment(assignmentData, {
         onSuccess: (data: { id?: string }) => {
-          // If API returns the new assignment's id, redirect to its details page
           if (data && data.id) {
             router.push(`/assignments/${data.id}`);
           } else {
@@ -213,14 +212,21 @@ export function CreateAssignmentForm({ assignmentId }: { assignmentId?: string }
               <Input
                 id="file"
                 type="file"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                onChange={(e) => {
+                  setFile(e.target.files?.[0] || null);
+                  setFileUrl("");
+                }}
                 className="file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                // disabled={uploading} (uploading removed)
               />
               {file && (
                 <div className="flex items-center text-sm text-muted-foreground">
                   <Upload className="mr-1 h-4 w-4" />
                   {file.name}
                 </div>
+              )}
+              {fileUrl && (
+                <span className="text-xs text-green-600 ml-2">Uploaded</span>
               )}
             </div>
           </div>

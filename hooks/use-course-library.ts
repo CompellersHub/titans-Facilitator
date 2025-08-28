@@ -53,13 +53,8 @@ export function useCreateCourseLibrary() {
       const formData = new FormData();
       formData.append("title", libraryData.title);
       formData.append("course", libraryData.course);
-
-      if (libraryData.file) {
-        formData.append("file", libraryData.file);
-      }
-      if (libraryData.url) {
-        formData.append("url", libraryData.url);
-      }
+      if (libraryData.file) formData.append("file", libraryData.file);
+      if (libraryData.url) formData.append("url", libraryData.url);
 
       const response = await fetch(
         `${apiClient["baseUrl"]}/courses/courselibrary/`,
@@ -101,11 +96,13 @@ export function useUpdateCourseLibrary() {
       if (data.title) formData.append("title", data.title);
       if (data.file) formData.append("file", data.file);
       if (data.url) formData.append("url", data.url);
+      if ((data as any).course) formData.append("course", (data as any).course);
+      // Do NOT send id in payload, backend should get it from URL
 
       const response = await fetch(
         `${apiClient["baseUrl"]}/courses/courselibrary/${libraryId}/`,
         {
-          method: "PATCH",
+          method: "PUT",
           headers: {
             Authorization: `Bearer ${apiClient.getAccessToken()}`,
           },

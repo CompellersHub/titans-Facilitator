@@ -17,11 +17,13 @@ import {
   useCourseLibraryItem,
   useDeleteCourseLibrary,
 } from "@/hooks/use-course-library";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useCourse } from "@/hooks/use-courses";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Image from "next/image";
+import { useState } from "react";
 
 interface LibraryItemDetailsProps {
   libraryId: string;
@@ -83,15 +85,19 @@ export function LibraryItemDetails({ libraryId }: LibraryItemDetailsProps) {
     }
   };
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const handleDelete = () => {
-    if (confirm("Are you sure you want to delete this library item?")) {
-      deleteItem(libraryId, {
-        onSuccess: () => {
-          toast.success("Library item deleted successfully");
-          router.push("/courses/library");
-        },
-      });
-    }
+    deleteItem(libraryId, {
+      onSuccess: () => {
+        toast.success("Library item deleted successfully");
+        setDeleteDialogOpen(false);
+        window.location.assign("/library");
+      },
+      onError: () => {
+        toast.error("Failed to delete library item");
+        setDeleteDialogOpen(false);
+      },
+    });
   };
 
   const copyToClipboard = (text: string) => {
@@ -133,19 +139,34 @@ export function LibraryItemDetails({ libraryId }: LibraryItemDetailsProps) {
           <p className="text-muted-foreground">Library Resource Details</p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline">
+          {/* Only one working Edit button below */}
+          <Button
+            variant="outline"
+            onClick={() => router.push(`/library/${libraryId}/edit`)}
+          >
             <Edit className="mr-2 h-4 w-4" />
             Edit
           </Button>
-          <Button
-            variant="outline"
-            className="text-destructive bg-transparent"
-            onClick={handleDelete}
-            disabled={isDeleting}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-          </Button>
+          <ConfirmDialog
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            title="Delete Library Item?"
+            description="Are you sure you want to delete this resource? This action cannot be undone."
+            confirmText="Delete"
+            cancelText="Cancel"
+            onConfirm={handleDelete}
+            loading={isDeleting}
+            trigger={
+              <Button
+                variant="outline"
+                className="text-destructive bg-transparent"
+                disabled={isDeleting}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
+            }
+          />
         </div>
       </div>
 
@@ -173,7 +194,7 @@ export function LibraryItemDetails({ libraryId }: LibraryItemDetailsProps) {
                   {fileInfo?.type === "Image" ? (
                     <div className="relative h-64 bg-gray-50 rounded-lg overflow-hidden">
                       <Image
-                        src={`https://api.titanscareers.com${libraryItem.file}`}
+                        src={libraryItem.file.startsWith('http') ? libraryItem.file : `https://api.titanscareers.com${libraryItem.file}`}
                         alt={libraryItem.title}
                         fill
                         className="object-contain"
@@ -305,7 +326,9 @@ export function LibraryItemDetails({ libraryId }: LibraryItemDetailsProps) {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Created</span>
                 <span className="font-medium">
-                  {format(new Date(libraryItem.created_at), "MMM dd, yyyy")}
+                  {libraryItem.created_at && !isNaN(new Date(libraryItem.created_at).getTime())
+                    ? format(new Date(libraryItem.created_at), "MMM dd, yyyy")
+                    : "Unknown date"}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -328,22 +351,52 @@ export function LibraryItemDetails({ libraryId }: LibraryItemDetailsProps) {
             </CardHeader>
             <CardContent className="space-y-2">
               {libraryItem.file && (
-                <Button className="w-full bg-transparent" variant="outline">
+                <Button
+                  className="w-full bg-transparent"
+                  variant="outline"
+                  onClick={() =>
+                    window.open(
+                      `https://api.titanscareers.com${libraryItem.file}`,
+                      "_blank"
+                    )
+                  }
+                >
                   <Download className="mr-2 h-4 w-4" />
                   Download File
                 </Button>
               )}
               {libraryItem.url && (
-                <Button className="w-full bg-transparent" variant="outline">
+                <Button
+                  className="w-full bg-transparent"
+                  variant="outline"
+                  onClick={() => window.open(libraryItem.url, "_blank")}
+                >
                   <ExternalLink className="mr-2 h-4 w-4" />
                   Open Link
                 </Button>
               )}
-              <Button className="w-full bg-transparent" variant="outline">
+              <Button
+                className="w-full bg-transparent"
+                variant="outline"
+                onClick={() => {
+                  const link = libraryItem.file
+                    ? `https://api.titanscareers.com${libraryItem.file}`
+                    : libraryItem.url || "";
+                  copyToClipboard(link);
+                }}
+              >
                 <Copy className="mr-2 h-4 w-4" />
                 Copy Link
               </Button>
-              <Button className="w-full bg-transparent" variant="outline">
+              <Button
+                className="w-full bg-transparent"
+                variant="outline"
+                onClick={() => {
+                  if (course?.id) {
+                    router.push(`/courses/${course.id}`);
+                  }
+                }}
+              >
                 <BookOpen className="mr-2 h-4 w-4" />
                 View Course
               </Button>

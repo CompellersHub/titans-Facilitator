@@ -11,12 +11,10 @@ import {
 } from "@aws-sdk/client-s3";
 
 const S3_CONFIG = {
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID || "AKIA3LJ4RV54VBU3THAR",
-  secretAccessKey:
-    process.env.AWS_SECRET_ACCESS_KEY ||
-    "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",
-  region: process.env.AWS_REGION || "eu-north-1",
-  bucket: process.env.AWS_S3_BUCKET || "titanscareers",
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  region: process.env.AWS_REGION!,
+  bucket: process.env.AWS_S3_BUCKET!,
 };
 
 // Initialize S3 client

@@ -30,17 +30,33 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
 import { useCreateCourseLibrary } from "@/hooks/use-course-library";
+import type { CreateCourseLibraryData } from "@/lib/types";
 import { useCourses } from "@/hooks/use-courses";
 
-export function CreateLibraryItemForm() {
-  const [title, setTitle] = useState("");
-  const [selectedCourse, setSelectedCourse] = useState("");
-  const [resourceType, setResourceType] = useState<"file" | "url">("file");
+import { useCourseLibraryItem, useUpdateCourseLibrary } from "@/hooks/use-course-library";
+
+interface CreateLibraryItemFormProps {
+  libraryId?: string;
+  isEditMode?: boolean;
+}
+
+export function CreateLibraryItemForm({ libraryId, isEditMode = false }: CreateLibraryItemFormProps) {
+  // If in edit mode, fetch existing library item
+  const { data: existingItem, isLoading: isLoadingItem } = useCourseLibraryItem(libraryId || "", { enabled: !!libraryId && isEditMode });
+  const { mutate: updateLibraryItem, isPending: isUpdating, error: updateError } = useUpdateCourseLibrary();
+  const [title, setTitle] = useState<string>(existingItem?.title || "");
+  // Always use course_id for selectedCourse, fallback to empty string
+  const [selectedCourse, setSelectedCourse] = useState<string>(
+    isEditMode && existingItem?.course_id ? existingItem.course_id : ""
+  );
+  const [resourceType, setResourceType] = useState<"file" | "url">(
+    existingItem?.file ? "file" : existingItem?.url ? "url" : "file"
+  );
   const [file, setFile] = useState<File | null>(null);
-  const [url, setUrl] = useState("");
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [fileUrl, setFileUrl] = useState<string>("");
+  const [url, setUrl] = useState<string>(existingItem?.url || "");
+  // Removed uploading state, no longer needed
 
   const router = useRouter();
   const {
@@ -50,46 +66,57 @@ export function CreateLibraryItemForm() {
   } = useCreateCourseLibrary();
   const { data: courses, isLoading: coursesLoading } = useCourses();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !selectedCourse) return;
 
-    const libraryData = {
+    // Always include course ID in payload
+    const libraryData: CreateCourseLibraryData = {
       title,
-      course: selectedCourse,
-      file: resourceType === "file" ? file : null,
-      url: resourceType === "url" ? url : undefined,
+      course: selectedCourse || existingItem?.course_id || "",
+      ...(resourceType === "file" && file ? { file } : {}),
+      ...(resourceType === "url" && url ? { url } : {}),
     };
 
-    createLibraryItem(libraryData, {
-      onSuccess: () => {
-        router.push("/library");
-      },
-    });
+    if (isEditMode && libraryId) {
+      updateLibraryItem({ libraryId, data: libraryData }, {
+        onSuccess: () => {
+          router.push("/library");
+        },
+      });
+    } else {
+      createLibraryItem(libraryData, {
+        onSuccess: () => {
+          router.push("/library");
+        },
+      });
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
-      // Simulate upload progress
-      setUploadProgress(0);
-      const interval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            return 100;
-          }
-          return prev + 10;
-        });
-      }, 100);
+      setFileUrl("");
     }
   };
 
   const isFormValid =
     title &&
     selectedCourse &&
-    ((resourceType === "file" && file) || (resourceType === "url" && url));
+    ((resourceType === "file" && (file || (isEditMode && existingItem?.file))) || (resourceType === "url" && url));
+
+  if (error || updateError) {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>{error?.message || updateError?.message}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (isEditMode && isLoadingItem) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -97,10 +124,10 @@ export function CreateLibraryItemForm() {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <FileText className="h-6 w-6 text-emerald-600" />
-            <span>Add Library Resource</span>
+            <span>{isEditMode ? "Edit Library Resource" : "Add Library Resource"}</span>
           </CardTitle>
           <CardDescription>
-            Add a new file or external link to your course library
+            {isEditMode ? "Update your library resource details and file" : "Add a new file or external link to your course library"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -214,13 +241,11 @@ export function CreateLibraryItemForm() {
                               <span className="text-muted-foreground">
                                 ({(file.size / 1024 / 1024).toFixed(2)} MB)
                               </span>
+                              {/* Removed uploading spinner, uploading state is gone */}
+                              {fileUrl && (
+                                <span className="text-xs text-green-600 ml-2">Uploaded</span>
+                              )}
                             </div>
-                            {uploadProgress > 0 && uploadProgress < 100 && (
-                              <Progress
-                                value={uploadProgress}
-                                className="w-full"
-                              />
-                            )}
                           </div>
                         )}
                       </div>
@@ -273,12 +298,12 @@ export function CreateLibraryItemForm() {
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Adding Resource...
+                    {isEditMode ? "Updating Resource..." : "Adding Resource..."}
                   </>
                 ) : (
                   <>
                     <FileText className="mr-2 h-4 w-4" />
-                    Add to Library
+                    {isEditMode ? "Update Resource" : "Add to Library"}
                   </>
                 )}
               </Button>

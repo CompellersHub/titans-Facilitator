@@ -323,7 +323,7 @@ function LibraryItemCard({
           <div className="relative h-32 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden">
             {item.file && fileInfo?.type === "IMG" ? (
               <Image
-                src={`https://api.titanscareers.com${item.file}`}
+                src={item.file.startsWith('http') ? item.file : `https://api.titanscareers.com${item.file}`}
                 alt={item.title}
                 fill
                 className="object-cover"
@@ -346,7 +346,9 @@ function LibraryItemCard({
           <div className="flex items-center justify-between">
             <div className="flex items-center text-sm text-muted-foreground">
               <Calendar className="mr-1 h-4 w-4" />
-              {format(new Date(item.created_at), "MMM dd, yyyy")}
+              {item.created_at && !isNaN(new Date(item.created_at).getTime())
+                ? format(new Date(item.created_at), "MMM dd, yyyy")
+                : "Unknown date"}
             </div>
             <div className="flex space-x-1">
               {item.file && (

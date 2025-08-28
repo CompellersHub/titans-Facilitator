@@ -250,12 +250,43 @@ export function CreateLiveClassForm() {
                   <Card
                     key={provider.id}
                     className={cn(
-                      "cursor-pointer transition-all duration-200 hover:shadow-md",
-                      provider.color,
+                      "cursor-pointer transition-all duration-200 hover:shadow-md border-2 border-dashed",
                       selectedProvider?.id === provider.id
-                        ? "ring-2 ring-blue-500 shadow-md"
-                        : "border-2 border-dashed"
+                        ? "ring-2 shadow-md border-2 border-white"
+                        : "border-muted",
+                      // Company color backgrounds
+                      provider.id === "zoom"
+                        ? "bg-blue-600 text-white border-blue-600 dark:bg-blue-700 dark:text-white"
+                        : provider.id === "google"
+                        ? "bg-green-500 text-white border-green-500 dark:bg-green-600 dark:text-white"
+                        : provider.id === "jitsi"
+                        ? "bg-teal-500 text-white border-teal-500 dark:bg-teal-600 dark:text-white"
+                        : provider.id === "aws"
+                        ? "bg-orange-500 text-white border-orange-500 dark:bg-orange-600 dark:text-white"
+                        : provider.id === "stream"
+                        ? "bg-purple-600 text-white border-purple-600 dark:bg-purple-700 dark:text-white"
+                        : "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                     )}
+                    style={{
+                      background:
+                        selectedProvider?.id === provider.id
+                          ? provider.id === "zoom"
+                            ? "linear-gradient(90deg, #2563eb 0%, #3b82f6 100%)"
+                            : provider.id === "google"
+                            ? "linear-gradient(90deg, #34a853 0%, #4285f4 100%)"
+                            : provider.id === "jitsi"
+                            ? "linear-gradient(90deg, #14b8a6 0%, #22d3ee 100%)"
+                            : provider.id === "aws"
+                            ? "linear-gradient(90deg, #f59e42 0%, #fbbf24 100%)"
+                            : provider.id === "stream"
+                            ? "linear-gradient(90deg, #a78bfa 0%, #7c3aed 100%)"
+                            : "linear-gradient(90deg, #2563eb 0%, #7c3aed 100%)"
+                          : undefined,
+                      color:
+                        selectedProvider?.id === provider.id
+                          ? "#fff"
+                          : undefined,
+                    }}
                     onClick={() => {
                       setSelectedProvider(provider);
                       generateMeetingLink(provider);
