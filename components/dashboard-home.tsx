@@ -248,13 +248,15 @@ export function DashboardHome() {
                     <span className="text-sm font-medium">View Students</span>
                   </Button>
                 </Link>
-                <Button
-                  variant="outline"
-                  className="w-full h-auto p-4 flex flex-col items-center space-y-2 bg-transparent"
-                >
-                  <MessageSquare className="h-5 w-5 text-pink-600" />
-                  <span className="text-sm font-medium">Send Message</span>
-                </Button>
+                <Link href="/students?sendMail=true">
+                  <Button
+                    variant="outline"
+                    className="w-full h-auto p-4 flex flex-col items-center space-y-2 bg-transparent"
+                  >
+                    <MessageSquare className="h-5 w-5 text-pink-600" />
+                    <span className="text-sm font-medium">Send Message</span>
+                  </Button>
+                </Link>
               </div>
 
               <Link href="/courses">

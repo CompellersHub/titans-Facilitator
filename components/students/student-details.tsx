@@ -29,6 +29,15 @@ import { Progress } from "@/components/ui/progress";
 import { useStudent, useStudentProgress } from "@/hooks/use-students";
 import { format } from "date-fns";
 import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { useSendMail } from "@/hooks/use-send-mail";
+import { Input } from "@/components/ui/input";
 
 interface StudentDetailsProps {
   studentId: string;
@@ -36,7 +45,10 @@ interface StudentDetailsProps {
 
 export function StudentDetails({ studentId }: StudentDetailsProps) {
   const { data: student, isLoading, error } = useStudent(studentId);
-  //   const [selectedCourseId, setSelectedCourseId] = useState<string>("");
+  const [singleMailOpen, setSingleMailOpen] = useState(false);
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const { mutate: sendMail } = useSendMail();
 
   if (error) {
     return (
@@ -244,7 +256,7 @@ export function StudentDetails({ studentId }: StudentDetailsProps) {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button className="w-full bg-transparent" variant="outline">
+              <Button className="w-full bg-gradient-to-r from-blue-500 via-emerald-400 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-emerald-500 transition-colors" variant="outline" onClick={() => setSingleMailOpen(true)}>
                 <Mail className="mr-2 h-4 w-4" />
                 Send Message
               </Button>
@@ -260,6 +272,76 @@ export function StudentDetails({ studentId }: StudentDetailsProps) {
           </Card>
         </div>
       </div>
+
+      <Dialog open={singleMailOpen} onOpenChange={setSingleMailOpen}>
+        <DialogContent className="mx-auto w-full max-w-lg wide-dialog border-2 border-blue-500 shadow-2xl bg-gradient-to-br from-blue-50 via-white to-emerald-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-800">
+          <div className="flex flex-col h-full w-full max-w-lg min-h-[400px] px-0 mx-auto">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-blue-400 bg-gradient-to-r from-blue-100 via-white to-emerald-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-800 rounded-t-2xl">
+              <div>
+                <DialogTitle className="text-xl font-bold flex items-center gap-4 text-blue-700 dark:text-blue-300">
+                  <Mail className="h-6 w-6 text-blue-600" />
+                  Send Mail to {displayName}
+                </DialogTitle>
+                <DialogDescription className="mt-2 text-base text-muted-foreground">
+                  Compose your message below.
+                </DialogDescription>
+              </div>
+              <DialogClose asChild>
+                <button className="text-2xl text-muted-foreground hover:text-blue-600 transition-colors" aria-label="Close">×</button>
+              </DialogClose>
+            </div>
+            <form className="px-6 py-6 bg-background flex flex-col gap-6">
+              <div>
+                <label className="block text-base font-semibold mb-2 text-blue-700 dark:text-blue-300" htmlFor="mail-subject">Subject</label>
+                <Input
+                  id="mail-subject"
+                  placeholder="Subject"
+                  value={subject}
+                  onChange={e => setSubject(e.target.value)}
+                  className="border-blue-400 focus:border-blue-600 focus:ring-blue-200 text-base"
+                />
+              </div>
+              <div>
+                <label className="block text-base font-semibold mb-2 text-blue-700 dark:text-blue-300" htmlFor="mail-body">Message</label>
+                <textarea
+                  id="mail-body"
+                  className="w-full min-h-[120px] border border-blue-400 rounded-xl p-4 bg-white dark:bg-input/40 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 text-base resize-vertical shadow-sm"
+                  placeholder={`Write your message to ${displayName}...`}
+                  value={body}
+                  onChange={e => setBody(e.target.value)}
+                  style={{ fontSize: '1.1rem', lineHeight: '1.7' }}
+                />
+              </div>
+            </form>
+            <div className="border-t border-blue-400 px-4 py-3 bg-gradient-to-r from-blue-100/60 via-white/60 to-emerald-100/60 dark:from-gray-900/40 dark:to-gray-800/40 rounded-b-2xl flex items-center gap-4">
+              <Button
+                className="w-full text-base font-semibold py-3 bg-gradient-to-r from-blue-500 via-emerald-400 to-blue-600 text-white shadow-md hover:from-blue-600 hover:to-emerald-500 transition-colors"
+                disabled={!subject || !body}
+                onClick={() => {
+                  sendMail({
+                    student_email: [student.email],
+                    subject,
+                    message: body,
+                    teacher_name: '', // Optionally fill from context
+                    teacher_email: '', // Optionally fill from context
+                  }, {
+                    onSuccess: () => {
+                      setSingleMailOpen(false);
+                      setSubject("");
+                      setBody("");
+                    },
+                    onError: () => {
+                      alert("Failed to send mail. Please try again.");
+                    },
+                  });
+                }}
+              >
+                Send Mail
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

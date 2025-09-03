@@ -23,8 +23,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLiveClass } from "@/hooks/use-live-classes";
+import { useUpdateLiveClass, useDeleteLiveClass } from "@/hooks/use-live-classes";
+import { useRouter } from "next/navigation";
 import { format, isAfter, isBefore } from "date-fns";
 import { toast } from "sonner";
+import { useState } from "react";
 
 interface LiveClassDetailsProps {
   classId: string;
@@ -32,10 +35,17 @@ interface LiveClassDetailsProps {
 
 export function LiveClassDetails({ classId }: LiveClassDetailsProps) {
   const { data: liveClass, isLoading, error } = useLiveClass(classId);
+  const { mutate: updateLiveClass } = useUpdateLiveClass();
+  const { mutate: deleteLiveClass, isPending: deleting } = useDeleteLiveClass();
+  const router = useRouter();
+  const [editOpen, setEditOpen] = useState(false);
+  const [editLink, setEditLink] = useState("");
+  const [editStart, setEditStart] = useState("");
+  const [editEnd, setEditEnd] = useState("");
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success("Copied to clipboard!");
+    toast.success("Copied successfully!");
   };
 
   if (error) {
@@ -103,16 +113,67 @@ export function LiveClassDetails({ classId }: LiveClassDetailsProps) {
               Join Live Class
             </Button>
           )}
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => {
+            setEditLink(liveClass.link);
+            setEditStart(liveClass.start_time.slice(0,16));
+            setEditEnd(liveClass.end_time.slice(0,16));
+            setEditOpen(true);
+          }}>
             <Edit className="mr-2 h-4 w-4" />
             Edit
           </Button>
-          <Button variant="outline" className="text-destructive bg-transparent">
+          <Button variant="outline" className="text-destructive bg-transparent" onClick={() => {
+            if (confirm("Are you sure you want to delete this live class?")) {
+              deleteLiveClass(classId, {
+                onSuccess: () => {
+                  toast.success("Live class deleted.");
+                  router.push("/schedule");
+                },
+                onError: () => toast.error("Failed to delete live class."),
+              });
+            }
+          }} disabled={deleting}>
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete
+            {deleting ? "Deleting..." : "Delete"}
           </Button>
         </div>
       </div>
+
+      {/* Edit Modal */}
+      {editOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl p-8 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Edit Live Class</h2>
+            <label className="block mb-2 font-semibold">Meeting Link</label>
+            <input type="url" value={editLink} onChange={e => setEditLink(e.target.value)} className="w-full mb-4 p-2 border rounded" />
+            <label className="block mb-2 font-semibold">Start Time</label>
+            <input type="datetime-local" value={editStart} onChange={e => setEditStart(e.target.value)} className="w-full mb-4 p-2 border rounded" />
+            <label className="block mb-2 font-semibold">End Time</label>
+            <input type="datetime-local" value={editEnd} onChange={e => setEditEnd(e.target.value)} className="w-full mb-4 p-2 border rounded" />
+            <div className="flex gap-4 mt-4">
+              <Button onClick={() => setEditOpen(false)} variant="outline">Cancel</Button>
+              <Button onClick={() => {
+                updateLiveClass({
+                  classId,
+                  data: {
+                    link: editLink,
+                    start_time: new Date(editStart).toISOString(),
+                    end_time: new Date(editEnd).toISOString(),
+                  },
+                }, {
+                  onSuccess: () => {
+                    toast.success("Live class updated.");
+                    setEditOpen(false);
+                  },
+                  onError: () => toast.error("Failed to update live class."),
+                });
+              }}>
+                Save
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
@@ -175,6 +236,15 @@ export function LiveClassDetails({ classId }: LiveClassDetailsProps) {
                     onClick={() => window.open(liveClass.link, "_blank")}
                   >
                     <ExternalLink className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      window.open(`mailto:?subject=Join Live Class&body=Join here: ${liveClass.link}`);
+                    }}
+                  >
+                    <Users className="h-4 w-4" />
                   </Button>
                 </div>
               </div>

@@ -30,12 +30,23 @@ import type { LiveClass } from "@/lib/types";
 
 export function SchedulePage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState<
-    "all" | "upcoming" | "live" | "completed"
-  >("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "upcoming" | "live" | "completed">("all");
   const { data: liveClasses, isLoading, error } = useLiveClasses();
 
-  const getClassStatus = (liveClass: LiveClass) => {
+  // Use results array if present (API returns { count, results })
+  let liveClassList: LiveClass[] = [];
+  if (Array.isArray(liveClasses)) {
+    liveClassList = liveClasses;
+  } else if (
+    liveClasses &&
+    typeof liveClasses === "object" &&
+    "results" in liveClasses &&
+    Array.isArray((liveClasses as { results?: unknown }).results)
+  ) {
+    liveClassList = (liveClasses as { results: LiveClass[] }).results;
+  }
+
+  const getClassStatus = (liveClass: LiveClass): "upcoming" | "live" | "completed" => {
     const now = new Date();
     const startTime = new Date(liveClass.start_time);
     const endTime = new Date(liveClass.end_time);
@@ -45,23 +56,17 @@ export function SchedulePage() {
     return "completed";
   };
 
-  const filteredClasses = Array.isArray(liveClasses)
-    ? liveClasses.filter((liveClass) => {
-        const matchesSearch = liveClass.course.name
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
-        const status = getClassStatus(liveClass);
-        const matchesFilter = filterStatus === "all" || status === filterStatus;
-        return matchesSearch && matchesFilter;
-      })
-    : [];
+  const filteredClasses = liveClassList.filter((liveClass) => {
+    const matchesSearch = liveClass.course?.name
+      ? liveClass.course.name.toLowerCase().includes(searchTerm.toLowerCase())
+      : false;
+    const status = getClassStatus(liveClass);
+    const matchesFilter = filterStatus === "all" || status === filterStatus;
+    return matchesSearch && matchesFilter;
+  });
 
-  const upcomingClasses = Array.isArray(liveClasses)
-    ? liveClasses.filter((c) => getClassStatus(c) === "upcoming")
-    : [];
-  const liveNow = Array.isArray(liveClasses)
-    ? liveClasses.filter((c) => getClassStatus(c) === "live")
-    : [];
+  const upcomingClasses = liveClassList.filter((c) => getClassStatus(c) === "upcoming");
+  const liveNow = liveClassList.filter((c) => getClassStatus(c) === "live");
 
   if (error) {
     return (
@@ -138,7 +143,7 @@ export function SchedulePage() {
                   Total Classes
                 </p>
                 <p className="text-2xl font-bold text-purple-600">
-                  {Array.isArray(liveClasses) ? liveClasses.length : 0}
+                  {liveClassList.length}
                 </p>
               </div>
               <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center">
@@ -156,16 +161,14 @@ export function SchedulePage() {
                   This Week
                 </p>
                 <p className="text-2xl font-bold text-orange-600">
-                  {Array.isArray(liveClasses)
-                    ? liveClasses.filter((c) => {
-                        const classDate = new Date(c.start_time);
-                        const weekFromNow = addHours(new Date(), 168); // 7 days
-                        return (
-                          isAfter(classDate, new Date()) &&
-                          isBefore(classDate, weekFromNow)
-                        );
-                      }).length
-                    : 0}
+                  {liveClassList.filter((c) => {
+                    const classDate = new Date(c.start_time);
+                    const weekFromNow = addHours(new Date(), 168); // 7 days
+                    return (
+                      isAfter(classDate, new Date()) &&
+                      isBefore(classDate, weekFromNow)
+                    );
+                  }).length}
                 </p>
               </div>
               <div className="h-8 w-8 bg-orange-100 rounded-full flex items-center justify-center">
@@ -252,7 +255,7 @@ export function SchedulePage() {
 }
 
 function LiveClassCard({ liveClass }: { liveClass: LiveClass }) {
-  const getClassStatus = (liveClass: LiveClass) => {
+  const getClassStatus = (liveClass: LiveClass): "upcoming" | "live" | "completed" => {
     const now = new Date();
     const startTime = new Date(liveClass.start_time);
     const endTime = new Date(liveClass.end_time);
@@ -266,7 +269,7 @@ function LiveClassCard({ liveClass }: { liveClass: LiveClass }) {
   const startTime = new Date(liveClass.start_time);
   const endTime = new Date(liveClass.end_time);
 
-  const statusConfig = {
+  const statusConfig: Record<string, { color: string; label: string; pulse?: boolean }> = {
     upcoming: { color: "bg-blue-100 text-blue-800", label: "Upcoming" },
     live: {
       color: "bg-green-100 text-green-800",
@@ -282,22 +285,20 @@ function LiveClassCard({ liveClass }: { liveClass: LiveClass }) {
         <div className="flex items-start justify-between">
           <div className="space-y-1">
             <CardTitle className="text-lg line-clamp-1">
-              {liveClass.course.name}
+              {liveClass.course?.name ?? "Unknown Course"}
             </CardTitle>
             <CardDescription className="flex items-center space-x-2">
               <Users className="h-4 w-4" />
               <span>
                 {liveClass.teacher
-                  ? `${liveClass.teacher.first_name} ${liveClass.teacher.last_name}`
+                  ? `${liveClass.teacher.first_name ?? ""} ${liveClass.teacher.last_name ?? ""}`.trim()
                   : "No instructor assigned"}
               </span>
             </CardDescription>
           </div>
           <div className="flex items-center space-x-2">
             <Badge
-              className={`${statusConfig[status].color} ${
-                statusConfig[status].label === "live" ? "animate-pulse" : ""
-              }`}
+              className={`${statusConfig[status].color} ${status === "live" ? "animate-pulse" : ""}`}
             >
               {statusConfig[status].label}
             </Badge>

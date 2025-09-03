@@ -73,8 +73,6 @@ export function SignUpForm() {
         );
       }
 
-      const data = await response.json();
-
       // On successful signup, redirect to success page
       router.push("/signup-success");
     } catch (err: unknown) {

@@ -155,3 +155,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Centered DialogContent override for Send Mail modal */
+.center-dialog[data-slot="dialog-content"] {
+  max-width: 42rem !important; /* max-w-2xl */
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Wider DialogContent override for Send Mail modal */
+.wide-dialog[data-slot="dialog-content"] {
+  max-width: 56rem !important; /* max-w-4xl */
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}

@@ -43,8 +43,8 @@ interface CreateLibraryItemFormProps {
 
 export function CreateLibraryItemForm({ libraryId, isEditMode = false }: CreateLibraryItemFormProps) {
   // If in edit mode, fetch existing library item
-  const { data: existingItem, isLoading: isLoadingItem } = useCourseLibraryItem(libraryId || "", { enabled: !!libraryId && isEditMode });
-  const { mutate: updateLibraryItem, isPending: isUpdating, error: updateError } = useUpdateCourseLibrary();
+  const { data: existingItem, isLoading: isLoadingItem } = useCourseLibraryItem(libraryId || "");
+  const { mutate: updateLibraryItem, error: updateError } = useUpdateCourseLibrary();
   const [title, setTitle] = useState<string>(existingItem?.title || "");
   // Always use course_id for selectedCourse, fallback to empty string
   const [selectedCourse, setSelectedCourse] = useState<string>(
@@ -132,9 +132,15 @@ export function CreateLibraryItemForm({ libraryId, isEditMode = false }: CreateL
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
+            {(error || updateError) && (
               <Alert variant="destructive">
-                <AlertDescription>{error.message}</AlertDescription>
+                <AlertDescription>
+                  {error && typeof error === "object" && "message" in error
+                    ? (error as unknown as { message?: string }).message
+                    : updateError && typeof updateError === "object" && "message" in updateError
+                    ? (updateError as unknown as { message?: string }).message
+                    : String(error || updateError)}
+                </AlertDescription>
               </Alert>
             )}
 

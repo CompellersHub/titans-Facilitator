@@ -35,9 +35,9 @@ export function VerifyOTPForm() {
   const queryClient = useQueryClient();
 
   // Get params from URL
-  const teacherId = searchParams.get("teacher_id");
-  const email = searchParams.get("email");
-  const message = searchParams.get("message");
+  const teacherId = searchParams?.get("teacher_id") ?? "";
+  const email = searchParams?.get("email") ?? "";
+  const message = searchParams?.get("message") ?? "";
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [isLoading, setIsLoading] = useState(false);

@@ -4,7 +4,7 @@ import type React from "react";
 
 import { useState } from "react";
 import { DashboardSidebar } from "./dashboard-sidebar";
-import { Bell, ChevronLeft, Menu } from "lucide-react";
+import { ChevronLeft, Menu } from "lucide-react";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { usePathname, useRouter } from "next/navigation";
@@ -18,7 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { ModeToggle } from "./mode-toggle";
 
@@ -74,10 +74,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </h1>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon">
-              <Bell className="h-5 w-5" />
-              <span className="sr-only">Notifications</span>
-            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -105,17 +101,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() => logout()}
+                  onClick={() => {
+                    logout();
+                    router.push("/login");
+                  }}
                   className="text-red-600"
                 >
                   <LogOut className="mr-2 h-4 w-4" />

@@ -72,7 +72,7 @@ export function useUpdateLiveClass() {
     }) => {
       // Send JSON payload instead of FormData
       const response = await fetch(
-        `${apiClient["baseUrl"]}/courses/CreateLiveClass/${classId}/`,
+        `${apiClient["baseUrl"]}/courses/live-classes/${classId}/`,
         {
           method: "PATCH",
           headers: {
@@ -104,9 +104,10 @@ export function useDeleteLiveClass() {
 
   return useMutation({
     mutationFn: (classId: string) =>
-      apiClient.delete(`/courses/CreateLiveClass/${classId}/`),
-    onSuccess: () => {
+      apiClient.delete(`/courses/live-classes/${classId}/`),
+    onSuccess: (_, classId) => {
       queryClient.invalidateQueries({ queryKey: LIVE_CLASS_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: LIVE_CLASS_KEYS.detail(classId) });
     },
   });
 }

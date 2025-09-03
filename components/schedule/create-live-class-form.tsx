@@ -83,16 +83,31 @@ export function CreateLiveClassForm() {
   const [meetingLink, setMeetingLink] = useState("");
   const [selectedProvider, setSelectedProvider] =
     useState<LiveClassProvider | null>(null);
+  const [linkError, setLinkError] = useState<string>("");
 
   const router = useRouter();
   const { user } = useAuth();
   const { mutate: createLiveClass, isPending, error } = useCreateLiveClass();
   const { data: courses, isLoading: coursesLoading } = useCourses();
 
+  const validateUrl = (url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setLinkError("");
     if (!selectedDate || !startTime || !endTime || !selectedCourse || !user)
       return;
+    if (!meetingLink || !validateUrl(meetingLink)) {
+      setLinkError("Please enter a valid meeting URL.");
+      return;
+    }
 
     const startDateTime = new Date(selectedDate);
     const [startHour, startMinute] = startTime.split(":");
@@ -312,7 +327,10 @@ export function CreateLiveClassForm() {
                     type="url"
                     placeholder="https://meet.google.com/abc-defg-hij"
                     value={meetingLink}
-                    onChange={(e) => setMeetingLink(e.target.value)}
+                    onChange={(e) => {
+                      setMeetingLink(e.target.value);
+                      setLinkError("");
+                    }}
                     className="pl-10 h-12"
                     required
                   />
@@ -328,6 +346,11 @@ export function CreateLiveClassForm() {
                   </Button>
                 )}
               </div>
+              {linkError && (
+                <p className="text-xs text-red-600 font-semibold mt-1">
+                  {linkError}
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">
                 {selectedProvider
                   ? `Generate a new ${selectedProvider.name} meeting link or paste your own`
