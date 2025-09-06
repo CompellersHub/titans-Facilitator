@@ -103,8 +103,27 @@ export function useDeleteLiveClass() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (classId: string) =>
-      apiClient.delete(`/courses/live-classes/${classId}/`),
+    mutationFn: async (classId: string) => {
+      try {
+        const response = await fetch(`https://api.titanscareers.com/courses/live-classes/${classId}/`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${apiClient.getAccessToken()}`,
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error("Delete live class error:", errorData);
+          throw new Error(errorData.message || errorData.detail || "Failed to delete live class");
+        }
+
+        return { success: true };
+      } catch (error) {
+        console.error("Failed to delete live class:", error);
+        throw error;
+      }
+    },
     onSuccess: (_, classId) => {
       queryClient.invalidateQueries({ queryKey: LIVE_CLASS_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: LIVE_CLASS_KEYS.detail(classId) });

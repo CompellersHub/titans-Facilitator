@@ -28,6 +28,7 @@ import { useRouter } from "next/navigation";
 import { format, isAfter, isBefore } from "date-fns";
 import { toast } from "sonner";
 import { useState } from "react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface LiveClassDetailsProps {
   classId: string;
@@ -42,10 +43,26 @@ export function LiveClassDetails({ classId }: LiveClassDetailsProps) {
   const [editLink, setEditLink] = useState("");
   const [editStart, setEditStart] = useState("");
   const [editEnd, setEditEnd] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success("Copied successfully!");
+  };
+
+  const handleDelete = () => {
+    deleteLiveClass(classId, {
+      onSuccess: () => {
+        toast.success("Live class deleted successfully");
+        setDeleteDialogOpen(false);
+        router.push("/schedule");
+      },
+      onError: (error) => {
+        console.error("Delete error:", error);
+        toast.error("Failed to delete live class");
+        setDeleteDialogOpen(false);
+      },
+    });
   };
 
   if (error) {
@@ -122,20 +139,26 @@ export function LiveClassDetails({ classId }: LiveClassDetailsProps) {
             <Edit className="mr-2 h-4 w-4" />
             Edit
           </Button>
-          <Button variant="outline" className="text-destructive bg-transparent" onClick={() => {
-            if (confirm("Are you sure you want to delete this live class?")) {
-              deleteLiveClass(classId, {
-                onSuccess: () => {
-                  toast.success("Live class deleted.");
-                  router.push("/schedule");
-                },
-                onError: () => toast.error("Failed to delete live class."),
-              });
+          <ConfirmDialog
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            title="Delete Live Class?"
+            description="Are you sure you want to delete this live class? This action cannot be undone."
+            confirmText="Delete"
+            cancelText="Cancel"
+            onConfirm={handleDelete}
+            loading={deleting}
+            trigger={
+              <Button
+                variant="outline"
+                className="text-destructive bg-transparent"
+                disabled={deleting}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
             }
-          }} disabled={deleting}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            {deleting ? "Deleting..." : "Delete"}
-          </Button>
+          />
         </div>
       </div>
 

@@ -21,7 +21,18 @@ const COURSE_LIBRARY_KEYS = {
 export function useCourseLibrary(filters?: Record<string, any>) {
   return useQuery({
     queryKey: COURSE_LIBRARY_KEYS.list(filters || {}),
-    queryFn: () => apiClient.get<CourseLibrary[]>("/courses/courselibrary/"),
+    queryFn: async () => {
+      try {
+        const data = await apiClient.get<CourseLibrary[]>("/courses/courselibrary/");
+        console.log("Course library data:", data);
+        return data;
+      } catch (error) {
+        console.error("Failed to fetch course library:", error);
+        throw error;
+      }
+    },
+    retry: 3,
+    retryDelay: 1000,
   });
 }
 
@@ -130,8 +141,27 @@ export function useDeleteCourseLibrary() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (libraryId: string) =>
-      apiClient.delete(`/courses/courselibrary/${libraryId}/`),
+    mutationFn: async (libraryId: string) => {
+      try {
+        const response = await fetch(`https://api.titanscareers.com/courses/courselibrary/${libraryId}/`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${apiClient.getAccessToken()}`,
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error("Delete library item error:", errorData);
+          throw new Error(errorData.message || errorData.detail || "Failed to delete library item");
+        }
+
+        return { success: true };
+      } catch (error) {
+        console.error("Failed to delete library item:", error);
+        throw error;
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: COURSE_LIBRARY_KEYS.lists() });
     },

@@ -75,6 +75,18 @@ export function useAuth() {
       Cookies.remove("titans_access_token");
       Cookies.remove("titans_refresh_token");
       queryClient.clear();
+      // Redirect to home page after logout
+      router.push("/");
+    },
+    onError: () => {
+      // Even if logout API fails, clear local data and redirect
+      apiClient.setTokens(null, null);
+      localStorage.removeItem("titans_access_token");
+      localStorage.removeItem("titans_refresh_token");
+      Cookies.remove("titans_access_token");
+      Cookies.remove("titans_refresh_token");
+      queryClient.clear();
+      router.push("/");
     },
   });
 
@@ -100,6 +112,16 @@ export function useAuth() {
       router.push("/");
     }
   }, [user, router, pathname]);
+
+  // ✅ Redirect unauthenticated users from protected routes
+  useEffect(() => {
+    const protectedRoutes = ["/dashboard", "/courses", "/assignments", "/students", "/schedule", "/library"];
+    const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+    
+    if (!isLoading && !user && isProtectedRoute) {
+      router.push("/");
+    }
+  }, [user, isLoading, pathname, router]);
 
   return {
     user,

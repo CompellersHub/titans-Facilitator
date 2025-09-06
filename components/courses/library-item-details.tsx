@@ -91,9 +91,10 @@ export function LibraryItemDetails({ libraryId }: LibraryItemDetailsProps) {
       onSuccess: () => {
         toast.success("Library item deleted successfully");
         setDeleteDialogOpen(false);
-        window.location.assign("/library");
+        router.push("/library");
       },
-      onError: () => {
+      onError: (error) => {
+        console.error("Delete error:", error);
         toast.error("Failed to delete library item");
         setDeleteDialogOpen(false);
       },

@@ -10,6 +10,7 @@ import {
   Users,
   Video,
   ExternalLink,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,15 +24,20 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useLiveClasses } from "@/hooks/use-live-classes";
+import { useLiveClasses, useDeleteLiveClass } from "@/hooks/use-live-classes";
 import { format, isAfter, isBefore, addHours } from "date-fns";
 import Link from "next/link";
 import type { LiveClass } from "@/lib/types";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { toast } from "sonner";
 
 export function SchedulePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "upcoming" | "live" | "completed">("all");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [classToDelete, setClassToDelete] = useState<string | null>(null);
   const { data: liveClasses, isLoading, error } = useLiveClasses();
+  const { mutate: deleteClass, isPending: isDeleting } = useDeleteLiveClass();
 
   // Use results array if present (API returns { count, results })
   let liveClassList: LiveClass[] = [];
@@ -67,6 +73,29 @@ export function SchedulePage() {
 
   const upcomingClasses = liveClassList.filter((c) => getClassStatus(c) === "upcoming");
   const liveNow = liveClassList.filter((c) => getClassStatus(c) === "live");
+
+  const handleDelete = (classId: string) => {
+    setClassToDelete(classId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (classToDelete) {
+      deleteClass(classToDelete, {
+        onSuccess: () => {
+          toast.success("Live class deleted successfully");
+          setDeleteDialogOpen(false);
+          setClassToDelete(null);
+        },
+        onError: (error) => {
+          console.error("Delete error:", error);
+          toast.error("Failed to delete live class");
+          setDeleteDialogOpen(false);
+          setClassToDelete(null);
+        },
+      });
+    }
+  };
 
   if (error) {
     return (
@@ -226,7 +255,7 @@ export function SchedulePage() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredClasses?.map((liveClass) => (
-            <LiveClassCard key={liveClass.id} liveClass={liveClass} />
+            <LiveClassCard key={liveClass.id} liveClass={liveClass} onDelete={handleDelete} />
           ))}
         </div>
       )}
@@ -250,11 +279,23 @@ export function SchedulePage() {
           )}
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Live Class?"
+        description="Are you sure you want to delete this live class? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDelete}
+        loading={isDeleting}
+      />
     </div>
   );
 }
 
-function LiveClassCard({ liveClass }: { liveClass: LiveClass }) {
+function LiveClassCard({ liveClass, onDelete }: { liveClass: LiveClass; onDelete: (classId: string) => void }) {
   const getClassStatus = (liveClass: LiveClass): "upcoming" | "live" | "completed" => {
     const now = new Date();
     const startTime = new Date(liveClass.start_time);
@@ -347,6 +388,14 @@ function LiveClassCard({ liveClass }: { liveClass: LiveClass }) {
               Link
             </Button>
           )}
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-destructive hover:text-destructive"
+            onClick={() => onDelete(liveClass.id)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       </CardContent>
     </Card>

@@ -10,6 +10,7 @@ import {
   ExternalLink,
   Download,
   Calendar,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,12 +31,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCourseLibrary } from "@/hooks/use-course-library";
+import { useCourseLibrary, useDeleteCourseLibrary } from "@/hooks/use-course-library";
 import { useCourses } from "@/hooks/use-courses";
 import { format } from "date-fns";
 import Link from "next/link";
 import Image from "next/image";
 import type { Course, CourseLibrary } from "@/lib/types";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { toast } from "sonner";
 
 type FilType = {
   type: string;
@@ -46,16 +49,21 @@ type FilType = {
 export function CourseLibraryPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCourse, setSelectedCourse] = useState<string>("all");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const { data: libraryItems, isLoading, error } = useCourseLibrary();
   const { data: courses } = useCourses();
+  const { mutate: deleteItem, isPending: isDeleting } = useDeleteCourseLibrary();
   //   const courses = [];
 
   const filteredItems = libraryItems?.filter((item) => {
     const matchesSearch = item.title
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
+    // Handle both course_id and course field names
+    const courseId = item.course_id || (item as any).course;
     const matchesCourse =
-      selectedCourse === "all" || item.course_id === selectedCourse;
+      selectedCourse === "all" || courseId === selectedCourse;
     return matchesSearch && matchesCourse;
   });
 
@@ -91,6 +99,29 @@ export function CourseLibraryPage() {
         };
       default:
         return { type: "FILE", color: "bg-gray-100 text-gray-800", icon: "📁" };
+    }
+  };
+
+  const handleDelete = (itemId: string) => {
+    setItemToDelete(itemId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (itemToDelete) {
+      deleteItem(itemToDelete, {
+        onSuccess: () => {
+          toast.success("Library item deleted successfully");
+          setDeleteDialogOpen(false);
+          setItemToDelete(null);
+        },
+        onError: (error) => {
+          console.error("Delete error:", error);
+          toast.error("Failed to delete library item");
+          setDeleteDialogOpen(false);
+          setItemToDelete(null);
+        },
+      });
     }
   };
 
@@ -185,7 +216,7 @@ export function CourseLibraryPage() {
                   Courses
                 </p>
                 <p className="text-2xl font-bold text-orange-600">
-                  {new Set(libraryItems?.map((item) => item.course_id)).size ||
+                  {new Set(libraryItems?.map((item) => item.course_id || (item as any).course)).size ||
                     0}
                 </p>
               </div>
@@ -254,6 +285,7 @@ export function CourseLibraryPage() {
               item={item}
               courses={courses}
               getFileType={getFileType}
+              onDelete={handleDelete}
             />
           ))}
         </div>
@@ -278,6 +310,18 @@ export function CourseLibraryPage() {
           )}
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Library Resource?"
+        description="Are you sure you want to delete this resource? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDelete}
+        loading={isDeleting}
+      />
     </div>
   );
 }
@@ -286,13 +330,23 @@ function LibraryItemCard({
   item,
   courses,
   getFileType,
+  onDelete,
 }: {
   item: CourseLibrary;
   courses: Course[] | undefined;
   getFileType: (filename: string) => FilType;
+  onDelete: (itemId: string) => void;
 }) {
-  const course = courses?.find((c) => c.id === item.course_id);
+  // Handle both course_id and course field names
+  const courseId = item.course_id || (item as any).course;
+  const course = courses?.find((c) => c.id === courseId);
   const fileInfo = item.file ? getFileType(item.file) : null;
+  
+  // Debug logging
+  console.log("Library item:", item);
+  console.log("Course ID:", courseId);
+  console.log("Found course:", course);
+  console.log("Available courses:", courses?.map(c => ({ id: c.id, name: c.name })));
 
   return (
     <Link href={`/library/${item.id}`}>
@@ -379,6 +433,17 @@ function LibraryItemCard({
                   <ExternalLink className="h-4 w-4" />
                 </Button>
               )}
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-destructive hover:text-destructive"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onDelete(item.id);
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </CardContent>

@@ -198,7 +198,6 @@ export function CreateCourseForm({ courseId }: CreateCourseFormProps) {
         i === index ? { ...module, ...updates } : module
       ),
     }));
-    console.log("Updated Curriculum Module:", { index, updates });
   };
 
   const addVideoToModule = (moduleIndex: number) => {
@@ -602,18 +601,22 @@ function BasicInformationStep({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Full Description *</Label>
-        <Textarea
+        <Label htmlFor="description">Course Note Description *</Label>
+        <textarea
           id="description"
-          placeholder="Detailed course description"
+          name="description"
           value={formData.description || ""}
-          onChange={(e) =>
+          onChange={e =>
             setFormData((prev: any) => ({
               ...prev,
               description: e.target.value,
             }))
           }
           rows={4}
+          className="w-full border rounded-md p-2"
+          placeholder="Enter course note description"
+          autoComplete="off"
+          spellCheck={true}
         />
       </div>
 
@@ -817,9 +820,13 @@ function CurriculumStep({
                           description: video.description,
                           video_file: video.video_file,
                         })),
-                        course_note: module.course_note || {
+                        course_note: module.course_note ? {
+                          title: module.course_note.title || "",
+                          description: module.course_note.description || "",
+                          note_file: module.course_note.note_file || null,
+                        } : {
                           title: "",
-                          description: null,
+                          description: "",
                           note_file: null,
                         },
                       };
@@ -863,14 +870,20 @@ function CurriculumStep({
                       className="flex-1"
                     />
                     <Textarea
+                      id={`course_note_description_${moduleIndex}`}
                       placeholder="Course note description *"
-                      value={
-                        module.course_note?.description?.description1 || ""
-                      }
-                      onChange={(e) =>
-                        updateCourseNoteDescription(moduleIndex, e.target.value)
-                      }
-                      rows={2}
+                      value={module.course_note?.description || ""}
+                      onChange={e => {
+                        const mod = formData.curriculum[moduleIndex];
+                        onUpdateModule(moduleIndex, {
+                          course_note: {
+                            ...mod.course_note,
+                            description: e.target.value,
+                          },
+                        });
+                      }}
+                      rows={3}
+                      className="flex-1 border rounded p-2 w-full"
                     />
                   </div>
                   <div>

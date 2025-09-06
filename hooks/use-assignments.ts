@@ -15,7 +15,16 @@ const ASSIGNMENT_KEYS = {
 export function useAssignments(filters?: Record<string, any>) {
   return useQuery({
     queryKey: ASSIGNMENT_KEYS.list(filters || {}),
-    queryFn: () => apiClient.get<Assignment[]>("/courses/assignments/"),
+    queryFn: async () => {
+      try {
+        return await apiClient.get<Assignment[]>("/courses/assignments/");
+      } catch (error) {
+        console.error("Failed to fetch assignments:", error);
+        throw error;
+      }
+    },
+    retry: 3,
+    retryDelay: 1000,
   })
 }
 
@@ -32,28 +41,34 @@ export function useCreateAssignment() {
 
   return useMutation({
     mutationFn: async (assignmentData: CreateAssignmentData) => {
-      const formData = new FormData();
-      formData.append("course", assignmentData.course);
-      formData.append("title", assignmentData.title);
-      formData.append("description", assignmentData.description);
-      formData.append("due_date", assignmentData.due_date);
-      if (assignmentData.total_marks !== undefined) formData.append("total_marks", assignmentData.total_marks.toString());
-      if (assignmentData.file) formData.append("file", assignmentData.file);
+      try {
+        const formData = new FormData();
+        formData.append("course", assignmentData.course);
+        formData.append("title", assignmentData.title);
+        formData.append("description", assignmentData.description);
+        formData.append("due_date", assignmentData.due_date);
+        if (assignmentData.total_marks !== undefined) formData.append("total_marks", assignmentData.total_marks.toString());
+        if (assignmentData.file) formData.append("file", assignmentData.file);
 
-      const response = await fetch(`${apiClient["baseUrl"]}/courses/assignments/`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiClient.getAccessToken()}`,
-        },
-        body: formData,
-      });
+        const response = await fetch(`https://api.titanscareers.com/courses/assignments/`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiClient.getAccessToken()}`,
+          },
+          body: formData,
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to create assignment");
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error("Create assignment error:", errorData);
+          throw new Error(errorData.message || errorData.detail || "Failed to create assignment");
+        }
+
+        return response.json();
+      } catch (error) {
+        console.error("Failed to create assignment:", error);
+        throw error;
       }
-
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ASSIGNMENT_KEYS.lists() })
@@ -66,22 +81,28 @@ export function useUpdateAssignment() {
 
   return useMutation({
     mutationFn: async ({ assignmentId, data }: { assignmentId: string; data: UpdateAssignmentData }) => {
-      // Send JSON payload with S3 URL
-      const response = await fetch(`${apiClient["baseUrl"]}/courses/assignments/${assignmentId}/`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiClient.getAccessToken()}`,
-        },
-        body: JSON.stringify(data),
-      });
+      try {
+        // Send JSON payload with S3 URL
+        const response = await fetch(`https://api.titanscareers.com/courses/assignments/${assignmentId}/`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiClient.getAccessToken()}`,
+          },
+          body: JSON.stringify(data),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to update assignment");
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error("Update assignment error:", errorData);
+          throw new Error(errorData.message || errorData.detail || "Failed to update assignment");
+        }
+
+        return response.json();
+      } catch (error) {
+        console.error("Failed to update assignment:", error);
+        throw error;
       }
-
-      return response.json();
     },
     onSuccess: (_, { assignmentId }) => {
       queryClient.invalidateQueries({ queryKey: ASSIGNMENT_KEYS.detail(assignmentId) });
@@ -94,10 +115,48 @@ export function useDeleteAssignment() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (assignmentId: string) => apiClient.delete(`/courses/assignments/${assignmentId}/`),
+    mutationFn: async (assignmentId: string) => {
+      try {
+        const response = await fetch(`https://api.titanscareers.com/courses/assignments/${assignmentId}/`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${apiClient.getAccessToken()}`,
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error("Delete assignment error:", errorData);
+          throw new Error(errorData.message || errorData.detail || "Failed to delete assignment");
+        }
+
+        // Return success even if response is empty (204 No Content)
+        return { success: true };
+      } catch (error) {
+        console.error("Failed to delete assignment:", error);
+        throw error;
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ASSIGNMENT_KEYS.lists() })
     },
+  })
+}
+
+export function useAssignmentsByCourse(courseId: string) {
+  return useQuery({
+    queryKey: [...ASSIGNMENT_KEYS.all, "by-course", courseId],
+    queryFn: async () => {
+      try {
+        return await apiClient.get<Assignment[]>(`/courses/assignments/by_course/${courseId}/`);
+      } catch (error) {
+        console.error("Failed to fetch assignments by course:", error);
+        throw error;
+      }
+    },
+    enabled: !!courseId,
+    retry: 3,
+    retryDelay: 1000,
   })
 }
 
