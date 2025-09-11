@@ -102,6 +102,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
+                  onClick={() => router.push("/profile")}
+                >
+                  <span className="mr-2">👤</span> Profile
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
                   onClick={() => {
                     logout();
                     router.push("/login");
