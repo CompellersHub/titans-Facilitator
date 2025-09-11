@@ -4,7 +4,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryProvider } from "@/components/query-provider";
-import { ChatbotButton } from "@/components/ChatbotButton";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,6 +19,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning={true}>
+      <head>
+        {/* Botpress Chatbot Scripts */}
+        <script src="https://cdn.botpress.cloud/webchat/v3.2/inject.js"></script>
+        <script
+          src="https://files.bpcontent.cloud/2025/09/08/12/20250908124113-71Q3RR0M.js"
+          defer
+        ></script>
+      </head>
       <body className={inter.className}>
         <QueryProvider>
           <ThemeProvider
@@ -29,7 +36,6 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             {children}
-            <ChatbotButton />
           </ThemeProvider>
         </QueryProvider>
       </body>
