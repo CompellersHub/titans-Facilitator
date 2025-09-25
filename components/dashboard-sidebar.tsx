@@ -74,20 +74,20 @@ export function DashboardSidebar({
   const sidebarContent = (
     <>
       <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-12 w-12 items-center justify-center rounded-md">
-            {/* <GraduationCap className="h-5 w-5 text-primary-foreground" /> */}
-            {/* use the log image */}
+        <div className="flex items-center gap-2 w-full">
+          <div className="flex h-11 w-44 items-center justify-center rounded-md bg-white dark:bg-white">
             <Image
               alt="Titans Career Logo"
               src="https://titanscareers.com/assets/logo-DMzVeG9H.png"
-              width={400}
-              height={400}
+              width={open ? 224 : 64} // 224px for open (w-64), 64px for closed (w-20)
+              height={64}
+              style={{
+                width: "100%",
+                height: "auto",
+                objectFit: "contain",
+              }}
             />
           </div>
-          {(open || isMobile) && (
-            <span className="font-semibold text-gray-900 dark:text-white">TITANS CAREER</span>
-          )}
         </div>
         {!isMobile && (
           <button
