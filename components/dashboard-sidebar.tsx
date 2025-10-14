@@ -121,6 +121,31 @@ export function DashboardSidebar({
               {(open || isMobile) && <span>{item.name}</span>}
             </Link>
           ))}
+          {/* External Links */}
+          <a
+            href="https://titanscareers.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-primary hover:text-background",
+              !open && !isMobile && "justify-center"
+            )}
+          >
+            <Home className={cn("h-5 w-5", !open && !isMobile && "h-6 w-6")} />
+            {(open || isMobile) && <span>Main Website</span>}
+          </a>
+          <a
+            href="https://admin.titanscareers.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-primary hover:text-background",
+              !open && !isMobile && "justify-center"
+            )}
+          >
+            <Users className={cn("h-5 w-5", !open && !isMobile && "h-6 w-6")} />
+            {(open || isMobile) && <span>Super Admin</span>}
+          </a>
         </nav>
       </div>
       <div className="border-t border-sidebar-border p-4">

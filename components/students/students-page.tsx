@@ -12,7 +12,7 @@ import {
   Mail,
   GraduationCap,
   Eye,
-  Edit,
+  // Edit,
   MoreHorizontal,
   ChevronLeft,
   ChevronRight,
@@ -675,10 +675,10 @@ function StudentTableRow({ student }: { student: Student }) {
                 View Details
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            {/* <DropdownMenuItem>
               <Edit className="mr-2 h-4 w-4" />
               Edit Student
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
             <DropdownMenuItem onClick={() => setSingleMailOpen(true)}>
               <Mail className="mr-2 h-4 w-4" />
               Send Message

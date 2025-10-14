@@ -84,12 +84,6 @@ export function StudentDetails({ studentId }: StudentDetailsProps) {
           <h1 className="text-3xl font-bold tracking-tight">{displayName}</h1>
           <p className="text-muted-foreground">Student Profile</p>
         </div>
-        <div className="flex space-x-2">
-          <Button variant="outline">
-            <Edit className="mr-2 h-4 w-4" />
-            Edit Profile
-          </Button>
-        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
