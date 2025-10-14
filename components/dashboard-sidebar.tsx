@@ -144,7 +144,7 @@ export function DashboardSidebar({
             )}
           >
             <Users className={cn("h-5 w-5", !open && !isMobile && "h-6 w-6")} />
-            {(open || isMobile) && <span>Super Admin</span>}
+            {(open || isMobile) && <span>SuperAdmin website</span>}
           </a>
         </nav>
       </div>
