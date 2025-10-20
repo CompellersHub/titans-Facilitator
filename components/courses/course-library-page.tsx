@@ -382,6 +382,19 @@ function LibraryItemCard({
                 fill
                 className="object-cover"
               />
+            ) : item.file && fileInfo?.type === "PDF" ? (
+              <iframe
+                src={item.file.startsWith('http') ? item.file : `https://api.titanscareers.com${item.file}`}
+                title={item.title}
+                className="w-full h-full border-none rounded"
+                style={{ minHeight: '100%', minWidth: '100%' }}
+              />
+            ) : item.file && (fileInfo?.type === "DOC" || fileInfo?.type === "PPT") ? (
+              <div className="h-full flex flex-col items-center justify-center">
+                <div className="text-4xl mb-2">{fileInfo.icon}</div>
+                <p className="text-base font-semibold">{item.file.split('/').pop()}</p>
+                <p className="text-xs text-muted-foreground">{fileInfo.type} Preview not supported</p>
+              </div>
             ) : (
               <div className="h-full flex items-center justify-center">
                 <div className="text-center">
@@ -411,11 +424,8 @@ function LibraryItemCard({
                   variant="outline"
                   onClick={(e) => {
                     e.preventDefault();
-                    console.log(item.file);
-                    window.open(
-                      `https://api.titanscareers.com${item.file}`,
-                      "_blank"
-                    );
+                    const fileUrl = item.file.startsWith('http') ? item.file : `https://api.titanscareers.com${item.file}`;
+                    window.open(fileUrl, "_blank");
                   }}
                 >
                   <Download className="h-4 w-4" />
